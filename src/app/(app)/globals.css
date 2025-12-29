@@ -128,6 +128,12 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
+  --font-bitcount-grid: var(--font-bitcount-grid);
+  --font-montserrat: var(--font-montserrat);
+  --font-instrument-sans: var(--font-instrument-sans);
+  --font-geist-mono: var(--font-geist-mono);
+  --font-geist-sans: var(--font-geist-sans);
+  --font-eb-garamond: var(--font-eb-garamond);
 }
 
 @layer base {

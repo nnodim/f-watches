@@ -9,6 +9,7 @@ import React, { Suspense } from 'react'
 import { VariantSelector } from './VariantSelector'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { StockIndicator } from '@/components/product/StockIndicator'
+import RelatedProducts from '../RelatedProducts'
 
 export function ProductDescription({ product }: { product: Product }) {
   const { currency } = useCurrency()
@@ -51,6 +52,9 @@ export function ProductDescription({ product }: { product: Product }) {
     amount = product[priceField]
   }
 
+  const relatedProducts =
+    product.relatedProducts?.filter((relatedProduct) => typeof relatedProduct === 'object') ?? []
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -63,6 +67,13 @@ export function ProductDescription({ product }: { product: Product }) {
           )}
         </div>
       </div>
+      {relatedProducts.length ? (
+        <div>
+          <RelatedProducts small={true} products={relatedProducts as Product[]} />
+        </div>
+      ) : (
+        <></>
+      )}
       {product.description ? (
         <RichText className="" data={product.description} enableGutter={false} />
       ) : null}

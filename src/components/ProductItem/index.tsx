@@ -55,7 +55,7 @@ export const ProductItem: React.FC<Props> = ({
     }
   }
 
-  const itemPrice = variant?.priceInUSD || product.priceInUSD
+  const itemPrice = variant?.priceInNGN || product.priceInNGN
   const itemURL = `/products/${product.slug}${variant ? `?variant=${variant.id}` : ''}`
 
   return (

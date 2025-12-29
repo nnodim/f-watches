@@ -21,6 +21,7 @@ import {
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
 import { revalidatePage, revalidateDelete } from './hooks/revalidatePage'
+import { Features } from '@/blocks/FeaturesBlock/config'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
@@ -96,6 +97,7 @@ export const Pages: CollectionConfig = {
                 ThreeItemGrid,
                 Banner,
                 FormBlock,
+                Features
               ],
               required: true,
             },

@@ -47,14 +47,30 @@ export const Archive: Block = {
       admin: {
         condition: (_, siblingData) => siblingData.populateBy === 'collection',
       },
-      defaultValue: 'products',
+      defaultValue: 'posts',
       label: 'Collections To Show',
       options: [
         {
-          label: 'Products',
-          value: 'products',
+          label: 'Posts',
+          value: 'posts',
         },
+        { label: 'Products', value: 'products' },
       ],
+    },
+    {
+      name: 'filterType',
+      type: 'select',
+      label: 'Filter Type',
+      admin: {
+        condition: (_, siblingData) => siblingData.populateBy === 'collection',
+      },
+      options: [
+        { label: 'All', value: 'all' },
+        { label: 'Featured', value: 'featured' },
+        { label: 'On Sale', value: 'onSale' },
+        { label: 'New Arrivals', value: 'new-arrival' },
+      ],
+      defaultValue: 'all',
     },
     {
       name: 'categories',

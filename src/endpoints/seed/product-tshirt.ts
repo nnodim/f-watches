@@ -1166,6 +1166,7 @@ export const productTshirtData: (
         version: 1,
       },
     },
+    model: 'Tshirt',
     gallery: galleryImages,
     title: 'Tshirt',
     slug: 'tshirt',

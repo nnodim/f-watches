@@ -17,6 +17,7 @@ type FormData = {
 export const ForgotPasswordForm: React.FC = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const {
     formState: { errors },
@@ -25,6 +26,7 @@ export const ForgotPasswordForm: React.FC = () => {
   } = useForm<FormData>()
 
   const onSubmit = useCallback(async (data: FormData) => {
+    setLoading(true)
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/forgot-password`,
       {
@@ -44,6 +46,8 @@ export const ForgotPasswordForm: React.FC = () => {
         'There was a problem while attempting to send you a password reset email. Please try again.',
       )
     }
+
+    setLoading(false)
   }, [])
 
   return (
@@ -54,8 +58,7 @@ export const ForgotPasswordForm: React.FC = () => {
           <div className="prose dark:prose-invert mb-8">
             <p>
               {`Please enter your email below. You will receive an email message with instructions on
-              how to reset your password. To manage your all users, `}
-              <Link href="/admin/collections/users">login to the admin dashboard</Link>.
+              how to reset your password.`}
             </p>
           </div>
           <form className="max-w-lg" onSubmit={handleSubmit(onSubmit)}>
@@ -67,13 +70,14 @@ export const ForgotPasswordForm: React.FC = () => {
               </Label>
               <Input
                 id="email"
+                disabled={loading}
                 {...register('email', { required: 'Please provide your email.' })}
                 type="email"
               />
               {errors.email && <FormError message={errors.email.message} />}
             </FormItem>
 
-            <Button type="submit" variant="default">
+            <Button type="submit" disabled={loading} variant="default">
               Forgot Password
             </Button>
           </form>

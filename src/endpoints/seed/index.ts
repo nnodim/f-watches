@@ -186,6 +186,7 @@ export const seed = async ({
           title: category,
           slug: category,
         },
+        draft: true,
       }),
     ),
   ])

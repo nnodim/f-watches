@@ -186,6 +186,8 @@ export interface UserAuthOperations {
 export interface User {
   id: string;
   name?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
   roles?: ('admin' | 'customer')[] | null;
   orders?: {
     docs?: (string | Order)[];
@@ -252,7 +254,7 @@ export interface Order {
   transactions?: (string | Transaction)[] | null;
   status?: OrderStatus;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('NGN' | 'USD') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -286,6 +288,7 @@ export interface Product {
       }[]
     | null;
   layout?: (CallToActionBlock | ContentBlock | MediaBlock)[] | null;
+  model: string;
   inventory?: number | null;
   enableVariants?: boolean | null;
   variantTypes?: (string | VariantType)[] | null;
@@ -294,8 +297,19 @@ export interface Product {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  priceInNGNEnabled?: boolean | null;
+  priceInNGN?: number | null;
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
+  /**
+   * Internal cost price in NGN
+   */
+  costPriceInNGN?: number | null;
+  /**
+   * Internal cost price in USD
+   */
+  costPriceInUSD?: number | null;
+  isFeatured?: boolean | null;
   relatedProducts?: (string | Product)[] | null;
   meta?: {
     title?: string | null;
@@ -482,6 +496,7 @@ export interface Page {
     | ThreeItemGridBlock
     | BannerBlock
     | FormBlock
+    | FeaturesBlock
   )[];
   meta?: {
     title?: string | null;
@@ -576,7 +591,8 @@ export interface ArchiveBlock {
     [k: string]: unknown;
   } | null;
   populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'products' | null;
+  relationTo?: ('posts' | 'products') | null;
+  filterType?: ('all' | 'featured' | 'onSale' | 'new-arrival') | null;
   categories?: (string | Category)[] | null;
   limit?: number | null;
   selectedDocs?:
@@ -596,6 +612,22 @@ export interface ArchiveBlock {
 export interface Category {
   id: string;
   title: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  gallery: (string | Media)[];
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -873,6 +905,23 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock".
+ */
+export interface FeaturesBlock {
+  features?:
+    | {
+        icon?: ('settings' | 'blocks' | 'bot' | 'film' | 'chartPie' | 'messageCircle') | null;
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'features';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variants".
  */
 export interface Variant {
@@ -884,6 +933,8 @@ export interface Variant {
   product: string | Product;
   options: (string | VariantOption)[];
   inventory?: number | null;
+  priceInNGNEnabled?: boolean | null;
+  priceInNGN?: number | null;
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
   updatedAt: string;
@@ -905,7 +956,15 @@ export interface Transaction {
         id?: string | null;
       }[]
     | null;
-  paymentMethod?: 'stripe' | null;
+  paymentMethod?: ('paystack' | 'stripe') | null;
+  paystack?: {
+    customerCode?: string | null;
+    accessCode?: string | null;
+    reference?: string | null;
+    transactionId?: string | null;
+    paidAt?: string | null;
+    channel?: string | null;
+  };
   stripe?: {
     customerID?: string | null;
     paymentIntentID?: string | null;
@@ -929,7 +988,7 @@ export interface Transaction {
   order?: (string | null) | Order;
   cart?: (string | null) | Cart;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('NGN' | 'USD') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -952,7 +1011,7 @@ export interface Cart {
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
-  currency?: 'USD' | null;
+  currency?: ('NGN' | 'USD') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1162,6 +1221,8 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  _verified?: T;
+  _verificationToken?: T;
   roles?: T;
   orders?: T;
   cart?: T;
@@ -1223,6 +1284,7 @@ export interface PagesSelect<T extends boolean = true> {
         threeItemGrid?: T | ThreeItemGridBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
       };
   meta?:
     | T
@@ -1304,6 +1366,7 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   introContent?: T;
   populateBy?: T;
   relationTo?: T;
+  filterType?: T;
   categories?: T;
   limit?: T;
   selectedDocs?: T;
@@ -1357,10 +1420,28 @@ export interface FormBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock_select".
+ */
+export interface FeaturesBlockSelect<T extends boolean = true> {
+  features?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
+  description?: T;
+  gallery?: T;
   generateSlug?: T;
   slug?: T;
   updatedAt?: T;
@@ -1563,6 +1644,8 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
+  priceInNGNEnabled?: T;
+  priceInNGN?: T;
   priceInUSDEnabled?: T;
   priceInUSD?: T;
   updatedAt?: T;
@@ -1616,12 +1699,18 @@ export interface ProductsSelect<T extends boolean = true> {
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
       };
+  model?: T;
   inventory?: T;
   enableVariants?: T;
   variantTypes?: T;
   variants?: T;
+  priceInNGNEnabled?: T;
+  priceInNGN?: T;
   priceInUSDEnabled?: T;
   priceInUSD?: T;
+  costPriceInNGN?: T;
+  costPriceInUSD?: T;
+  isFeatured?: T;
   relatedProducts?: T;
   meta?:
     | T
@@ -1711,6 +1800,16 @@ export interface TransactionsSelect<T extends boolean = true> {
         id?: T;
       };
   paymentMethod?: T;
+  paystack?:
+    | T
+    | {
+        customerCode?: T;
+        accessCode?: T;
+        reference?: T;
+        transactionId?: T;
+        paidAt?: T;
+        channel?: T;
+      };
   stripe?:
     | T
     | {

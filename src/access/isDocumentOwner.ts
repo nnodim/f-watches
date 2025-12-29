@@ -26,6 +26,5 @@ export const isDocumentOwner: Access = ({ req }) => {
     }
   }
 
-  // Guest - no access
-  return false
+  return true
 }

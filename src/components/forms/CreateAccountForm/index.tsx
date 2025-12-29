@@ -6,7 +6,6 @@ import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/providers/Auth'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useRef, useState } from 'react'
@@ -21,7 +20,6 @@ type FormData = {
 export const CreateAccountForm: React.FC = () => {
   const searchParams = useSearchParams()
   const allParams = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  const { login } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<null | string>(null)
@@ -38,37 +36,42 @@ export const CreateAccountForm: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: FormData) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+      setError(null)
 
-      if (!response.ok) {
-        const message = response.statusText || 'There was an error creating the account.'
-        setError(message)
-        return
-      }
-
-      const redirect = searchParams.get('redirect')
-
-      const timer = setTimeout(() => {
-        setLoading(true)
-      }, 1000)
+      // Start a delayed loader to prevent flashing
+      const loader = setTimeout(() => setLoading(true), 150)
 
       try {
-        await login(data)
-        clearTimeout(timer)
-        if (redirect) router.push(redirect)
-        else router.push(`/account?success=${encodeURIComponent('Account created successfully')}`)
-      } catch (_) {
-        clearTimeout(timer)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        })
+
+        clearTimeout(loader)
+        setLoading(false)
+
+        if (!response.ok) {
+          const message = response.statusText || 'There was an error creating the account.'
+          setError(message)
+          return
+        }
+
+        const redirect = searchParams.get('redirect')
+
+        router.push(
+          redirect ||
+            `/login?success=${encodeURIComponent(
+              'Account created successfully. An email has been sent to verify your account.',
+            )}`,
+        )
+      } catch {
+        clearTimeout(loader)
+        setLoading(false)
         setError('There was an error with the credentials provided. Please try again.')
       }
     },
-    [login, router, searchParams],
+    [router, searchParams],
   )
 
   return (

@@ -19,6 +19,8 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import { DefaultDocumentIDType, Where } from 'payload'
+import { costPricesField } from '@/components/Fields/costPricesField'
+import { currenciesConfig } from '@/lib/constants'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -50,6 +52,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     enableVariants: true,
     gallery: true,
     priceInUSD: true,
+    priceInNGN: true,
+    costPriceInNGN: true,
+    costPriceInUSD: true,
+    categories: true,
     inventory: true,
     meta: true,
   },
@@ -142,7 +148,20 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         },
         {
           fields: [
+            {
+              name: 'model',
+              type: 'text',
+              label: 'Model',
+              required: true,
+            },
             ...defaultCollection.fields,
+            ...costPricesField({ currenciesConfig }),
+            {
+              name: 'isFeatured',
+              type: 'checkbox',
+              label: 'Featured product',
+              defaultValue: false,
+            },
             {
               name: 'relatedProducts',
               type: 'relationship',

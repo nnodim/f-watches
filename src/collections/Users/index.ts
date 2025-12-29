@@ -7,6 +7,11 @@ import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
+import { VerifyEmailEndpoint } from './endpoints/verifyEmail'
+import { addVerificationToken } from './hooks/addVerificationToken'
+import { sendVerificationEmail } from './hooks/sendVerificationEmail'
+import { verificationBeforeLogin } from './hooks/verificationBeforeLogin'
+import { ForgotPasswordEmailHtml } from '@/components/emails/ForgotPasswordEmail'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -22,13 +27,53 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'roles'],
     useAsTitle: 'name',
   },
+  hooks: {
+    beforeChange: [addVerificationToken],
+    afterChange: [sendVerificationEmail],
+    beforeLogin: [verificationBeforeLogin],
+  },
+  endpoints: [VerifyEmailEndpoint],
   auth: {
-    tokenExpiration: 1209600,
+    tokenExpiration: 86400,
+    forgotPassword: {
+      generateEmailHTML: async (args) => {
+        // Generate the email HTML
+        if (!args) {
+          throw new Error('Invalid arguments')
+        }
+        const html = await ForgotPasswordEmailHtml({
+          token: args.token as string,
+          userEmail: args.user.email,
+        })
+        return html
+      },
+      generateEmailSubject: () => {
+        return 'Reset Your Password - Fwatches'
+      },
+    },
   },
   fields: [
     {
       name: 'name',
       type: 'text',
+    },
+    {
+      name: '_verified',
+      type: 'checkbox',
+      defaultValue: false,
+      access: {
+        create: adminOnlyFieldAccess,
+        read: adminOnlyFieldAccess,
+        update: adminOnlyFieldAccess,
+      },
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: '_verificationToken',
+      type: 'text',
+      hidden: true,
     },
     {
       name: 'roles',

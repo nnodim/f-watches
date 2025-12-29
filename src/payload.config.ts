@@ -1,15 +1,15 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
-
+import { resendAdapter } from '@payloadcms/email-resend'
 import {
   BoldFeature,
   EXPERIMENTAL_TableFeature,
   IndentFeature,
   ItalicFeature,
+  lexicalEditor,
   LinkFeature,
   OrderedListFeature,
   UnderlineFeature,
   UnorderedListFeature,
-  lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -22,12 +22,21 @@ import { Users } from '@/collections/Users'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { plugins } from './plugins'
+import { analyticsEndpoint } from './endpoints/analytics'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
+    meta: {
+      icons: [
+        {
+          rel: 'icon',
+          url: '/favicon.ico',
+        },
+      ],
+    },
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
@@ -35,6 +44,13 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
       beforeDashboard: ['@/components/BeforeDashboard#BeforeDashboard'],
+      views: {
+        analytics: {
+          Component: '@/components/AdminAnalytics/index.tsx',
+          path: '/analytics',
+        },
+      },
+      afterNavLinks: [{ path: '@/components/AfterNavLinks/index.tsx' }],
     },
     user: Users.slug,
   },
@@ -77,9 +93,13 @@ export default buildConfig({
       ]
     },
   }),
-  //email: nodemailerAdapter(),
-  endpoints: [],
+  endpoints: [analyticsEndpoint],
   globals: [Header, Footer],
+  email: resendAdapter({
+    defaultFromAddress: 'admin@bellissimoeee.com',
+    defaultFromName: 'Fwatches',
+    apiKey: process.env.RESEND_API_KEY || '',
+  }),
   plugins,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

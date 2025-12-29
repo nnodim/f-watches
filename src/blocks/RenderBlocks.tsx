@@ -10,6 +10,7 @@ import { toKebabCase } from '@/utilities/toKebabCase'
 import React, { Fragment } from 'react'
 
 import type { Page } from '../payload-types'
+import { FeaturesBlock } from './FeaturesBlock/Component'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -20,6 +21,7 @@ const blockComponents = {
   formBlock: FormBlock,
   mediaBlock: MediaBlock,
   threeItemGrid: ThreeItemGridBlock,
+  features: FeaturesBlock,
 }
 
 export const RenderBlocks: React.FC<{

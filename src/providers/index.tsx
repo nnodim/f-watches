@@ -6,6 +6,8 @@ import React from 'react'
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { SonnerProvider } from '@/providers/Sonner'
+import { currenciesConfig } from '@/lib/constants'
+import { paystackAdapterClient } from '@/payment/paystack'
 
 export const Providers: React.FC<{
   children: React.ReactNode
@@ -34,7 +36,11 @@ export const Providers: React.FC<{
                 },
               },
             }}
+            currenciesConfig={currenciesConfig}
             paymentMethods={[
+              paystackAdapterClient({
+                publicKey: 'pk_test_xxx',
+              }),
               stripeAdapterClient({
                 publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
               }),
