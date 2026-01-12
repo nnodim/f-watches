@@ -1,5 +1,6 @@
-import type { ArchiveBlock as ArchiveBlockProps, Product } from '@/payload-types'
+import type { ArchiveBlock as ArchiveBlockProps, Post, Product } from '@/payload-types'
 
+import { CollectionArchive } from '@/components/CollectionArchive'
 import { Grid } from '@/components/Grid'
 import { ProductGridItem } from '@/components/ProductGridItem'
 import { Button } from '@/components/ui/button'
@@ -24,13 +25,14 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
     populateBy,
     selectedDocs,
     categories,
+    relationTo,
     filterType,
   } = props
 
   const limit = limitFromProps || 3
   const payload = await getPayload({ config: configPromise })
 
-  let docs: Product[] = []
+  let docs: (Post | Product)[] = []
 
   if (populateBy === 'collection') {
     const flattenedCategories = categories?.map((c) => (typeof c === 'object' ? c.id : c))
@@ -41,14 +43,15 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
       where.categories = { in: flattenedCategories }
     }
 
-    // Apply product-specific filters
-    if (filterType === 'featured') where.isFeatured = { equals: true }
-    if (filterType === 'onSale') where.isOnSale = { equals: true }
-    if (filterType === 'new-arrival')
-      where.createdAt = { greater_than: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }
+    if (relationTo === 'products') {
+      if (filterType === 'featured') where.isFeatured = { equals: true }
+      if (filterType === 'onSale') where.isOnSale = { equals: true }
+      if (filterType === 'new-arrival')
+        where.createdAt = { greater_than: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }
+    }
 
     const fetchedDocs = await payload.find({
-      collection: 'products',
+      collection: relationTo || 'posts',
       depth: 1,
       limit,
       ...(Object.keys(where).length
@@ -60,25 +63,27 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
   } else if (selectedDocs?.length) {
     docs = selectedDocs
       .map((d) => (typeof d.value === 'object' ? d.value : null))
-      .filter(Boolean) as Product[]
+      .filter(Boolean) as (Post | Product)[]
   }
 
   let viewMoreLink: string | null = null
 
-  switch (filterType) {
-    case 'new-arrival':
-      viewMoreLink = '/shop/new-arrival'
-      break
-    case 'onSale':
-      viewMoreLink = '/shop/on-sale'
-      break
-    case 'featured':
-      // Featured sections typically don't have a dedicated "view all" page,
-      // but you can add one if needed.
-      viewMoreLink = null
-      break
-    default:
-      viewMoreLink = '/shop/all'
+  if (relationTo === 'products') {
+    switch (filterType) {
+      case 'new-arrival':
+        viewMoreLink = '/shop/new-arrival'
+        break
+      case 'onSale':
+        viewMoreLink = '/shop/on-sale'
+        break
+      case 'featured':
+        viewMoreLink = null
+        break
+      default:
+        viewMoreLink = '/shop/all'
+    }
+  } else {
+    viewMoreLink = '/posts'
   }
 
   return (
@@ -96,28 +101,32 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
         </div>
       )}
 
-      {filterType === 'featured' ? (
-        <div className="container">
-          <Carousel opts={{ align: 'start' }} className="w-full">
-            <CarouselContent>
-              {docs.map((product) => (
-                <CarouselItem key={product.id} className="sm:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <ProductGridItem product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-1 md:-left-12" />
-            <CarouselNext className="-right-1 md:-right-12" />
-          </Carousel>
-        </div>
+      {relationTo === 'products' ? (
+        filterType === 'featured' ? (
+          <div className="container">
+            <Carousel opts={{ align: 'start' }} className="w-full">
+              <CarouselContent>
+                {(docs as Product[]).map((product) => (
+                  <CarouselItem key={product.id} className="sm:basis-1/2 lg:basis-1/3">
+                    <div className="p-1">
+                      <ProductGridItem product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="-left-1 md:-left-12" />
+              <CarouselNext className="-right-1 md:-right-12" />
+            </Carousel>
+          </div>
+        ) : (
+          <Grid className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(docs as Product[]).map((product) => (
+              <ProductGridItem key={product.id} product={product} />
+            ))}
+          </Grid>
+        )
       ) : (
-        <Grid className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {docs.map((product) => (
-            <ProductGridItem key={product.id} product={product} />
-          ))}
-        </Grid>
+        <CollectionArchive posts={docs as Post[]} />
       )}
     </div>
   )

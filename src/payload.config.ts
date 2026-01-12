@@ -23,6 +23,9 @@ import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { plugins } from './plugins'
 import { analyticsEndpoint } from './endpoints/analytics'
+import { Posts } from './collections/Post'
+import { PostCategories } from './collections/PostCategories'
+import { Expenses } from './collections/Expenses'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -54,7 +57,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Media],
+  collections: [Users, Expenses, Pages, Posts, PostCategories, Categories, Media],
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),

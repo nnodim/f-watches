@@ -2,6 +2,7 @@
 import type {
   AnalyticsData,
   CustomerProfitability,
+  ExpenseByCategory,
   OrderStatusData,
   RecentOrder,
   StatCardProps,
@@ -9,14 +10,14 @@ import type {
   TopProduct,
 } from '@/types/index'
 import {
+  CreditCard,
   DollarSign,
-  Package,
   Percent,
   ShoppingCart,
   TrendingDown,
   TrendingUp,
-  TrendingUpIcon,
   Users,
+  Wallet
 } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
@@ -59,12 +60,6 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '16px',
   },
-  title: {
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#111827',
-    margin: 0,
-  },
   select: {
     padding: '8px 16px',
     border: '1px solid #d1d5db',
@@ -106,17 +101,8 @@ const styles = {
     fontWeight: 500,
     gap: '4px',
   },
-  statLabel: {
-    color: '#6b7280',
-    fontSize: '13px',
-    fontWeight: 500,
-    marginBottom: '4px',
-  },
-  statValue: {
-    fontSize: '22px',
-    fontWeight: 700,
-    color: '#111827',
-  },
+  statLabel: { color: '#6b7280', fontSize: '13px', fontWeight: 500, marginBottom: '4px' },
+  statValue: { fontSize: '22px', fontWeight: 700, color: '#111827' },
   chartsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
@@ -129,20 +115,10 @@ const styles = {
     padding: '24px',
     boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
   },
-  chartTitle: {
-    fontSize: '18px',
-    fontWeight: 600,
-    color: '#111827',
-    marginBottom: '16px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse' as const,
-  },
-  tableHeader: {
-    backgroundColor: '#f9fafb',
-    borderBottom: '1px solid #e5e7eb',
-  },
+  chartTitle: { fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '16px' },
+  // ... Tables and other styles
+  table: { width: '100%', borderCollapse: 'collapse' as const },
+  tableHeader: { backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
   th: {
     padding: '12px 16px',
     textAlign: 'left' as const,
@@ -165,30 +141,9 @@ const styles = {
     fontWeight: 600,
     display: 'inline-block',
   },
-  loadingContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '256px',
-  },
-  spinner: {
-    width: '48px',
-    height: '48px',
-    border: '4px solid #e5e7eb',
-    borderTop: '4px solid #3b82f6',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-  profitPositive: {
-    color: '#059669',
-    fontWeight: 600,
-  },
-  profitNegative: {
-    color: '#dc2626',
-    fontWeight: 600,
-  },
+  profitPositive: { color: '#059669', fontWeight: 600 },
+  profitNegative: { color: '#dc2626', fontWeight: 600 },
 }
-
 const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, color }) => (
   <div style={styles.statCard}>
     <div style={styles.statCardHeader}>
@@ -199,9 +154,17 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, c
         <div
           style={{
             ...styles.changeIndicator,
-            color: change > 0 ? '#059669' : '#dc2626',
+            color:
+              change > 0
+                ? title === 'Expenses'
+                  ? '#dc2626'
+                  : '#059669'
+                : title === 'Expenses'
+                  ? '#059669'
+                  : '#dc2626',
           }}
         >
+          {/* Logic flipped for expenses: increase is bad (red), decrease is good (green) */}
           {change > 0 ? (
             <TrendingUp style={{ width: '14px', height: '14px' }} />
           ) : (
@@ -224,23 +187,26 @@ export const AnalyticsClient: React.FC = () => {
       totalRevenue: 0,
       totalProfit: 0,
       totalCost: 0,
+      totalExpenses: 0,
+      netProfit: 0,
       profitMargin: 0,
       totalOrders: 0,
       totalProducts: 0,
       totalCustomers: 0,
       revenueChange: 0,
       profitChange: 0,
+      expensesChange: 0,
       ordersChange: 0,
       productsChange: 0,
       customersChange: 0,
     },
     revenueData: [],
     orderStatusData: [],
+    expensesByCategory: [],
     topProducts: [],
     recentOrders: [],
     topCustomers: [],
   })
-
   const fetchAnalytics = useCallback(async (): Promise<void> => {
     setLoading(true)
     try {
@@ -315,14 +281,21 @@ export const AnalyticsClient: React.FC = () => {
           color="#3b82f6"
         />
         <StatCard
-          title="Total Profit"
-          value={formatCurrency(analytics.overview.totalProfit)}
+          title="Net Profit"
+          value={formatCurrency(analytics.overview.netProfit)}
           change={analytics.overview.profitChange}
-          icon={TrendingUpIcon}
+          icon={Wallet}
           color="#10b981"
         />
         <StatCard
-          title="Profit Margin"
+          title="Expenses"
+          value={formatCurrency(analytics.overview.totalExpenses)}
+          change={analytics.overview.expensesChange}
+          icon={CreditCard}
+          color="#ef4444"
+        />
+        <StatCard
+          title="Net Margin"
           value={`${analytics.overview.profitMargin.toFixed(1)}%`}
           change={0}
           icon={Percent}
@@ -334,13 +307,6 @@ export const AnalyticsClient: React.FC = () => {
           change={analytics.overview.ordersChange}
           icon={ShoppingCart}
           color="#f59e0b"
-        />
-        <StatCard
-          title="Products"
-          value={analytics.overview.totalProducts.toLocaleString()}
-          change={analytics.overview.productsChange}
-          icon={Package}
-          color="#ef4444"
         />
         <StatCard
           title="Customers"
@@ -355,7 +321,7 @@ export const AnalyticsClient: React.FC = () => {
       <div style={styles.chartsGrid}>
         {/* Revenue & Profit Chart */}
         <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Revenue & Profit Trend</h3>
+          <h3 style={styles.chartTitle}>Financial Overview</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={analytics.revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -376,7 +342,7 @@ export const AnalyticsClient: React.FC = () => {
                 dataKey="revenue"
                 stroke="#3b82f6"
                 strokeWidth={2}
-                dot={{ fill: '#3b82f6', r: 4 }}
+                dot={false}
                 name="Revenue"
               />
               <Line
@@ -384,18 +350,47 @@ export const AnalyticsClient: React.FC = () => {
                 dataKey="profit"
                 stroke="#10b981"
                 strokeWidth={2}
-                dot={{ fill: '#10b981', r: 4 }}
-                name="Profit"
+                dot={false}
+                name="Gross Profit"
               />
               <Line
                 type="monotone"
-                dataKey="cost"
+                dataKey="expense"
                 stroke="#ef4444"
                 strokeWidth={2}
-                dot={{ fill: '#ef4444', r: 4 }}
-                name="Cost"
+                dot={false}
+                name="Expenses"
               />
             </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Expenses Breakdown */}
+        <div style={styles.chartCard}>
+          <h3 style={styles.chartTitle}>Expenses by Category</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={analytics.expensesByCategory}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(props: PieLabelRenderProps) => {
+                  const name = (props && (props.name ?? '')) as string
+                  const percent = (props && props.percent) ?? 0
+                  return percent > 0.05 ? `${name}` : ''
+                }}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {analytics.expensesByCategory.map((entry: ExpenseByCategory, index: number) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number | undefined) => formatCurrency(value ?? 0)} />
+              <Legend />
+            </PieChart>
           </ResponsiveContainer>
         </div>
 

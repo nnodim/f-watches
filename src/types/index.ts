@@ -2,22 +2,34 @@ export interface AnalyticsOverview {
   totalRevenue: number
   totalProfit: number
   totalCost: number
+  totalExpenses: number
+  netProfit: number
   profitMargin: number
   totalOrders: number
   totalProducts: number
   totalCustomers: number
   revenueChange: number
   profitChange: number
+  expensesChange: number
   ordersChange: number
   productsChange: number
   customersChange: number
 }
 
+export interface ExpenseByCategory {
+  name: string
+  value: number
+  color: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: string | number | any
+}
+
 export interface RevenueDataPoint {
   date: string
   revenue: number
-  profit: number
   cost: number
+  profit: number
+  expense: number
 }
 
 export type OrderStatusData = {
@@ -60,6 +72,7 @@ export interface AnalyticsData {
   overview: AnalyticsOverview
   revenueData: RevenueDataPoint[]
   orderStatusData: OrderStatusData[]
+  expensesByCategory: ExpenseByCategory[]
   topProducts: TopProduct[]
   recentOrders: RecentOrder[]
   topCustomers: CustomerProfitability[]

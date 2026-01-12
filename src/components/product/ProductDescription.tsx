@@ -67,6 +67,9 @@ export function ProductDescription({ product }: { product: Product }) {
           )}
         </div>
       </div>
+
+      <hr />
+
       {relatedProducts.length ? (
         <div>
           <RelatedProducts small={true} products={relatedProducts as Product[]} />
@@ -74,12 +77,11 @@ export function ProductDescription({ product }: { product: Product }) {
       ) : (
         <></>
       )}
-      {product.description ? (
-        <RichText className="" data={product.description} enableGutter={false} />
-      ) : null}
-      <hr />
+
       {hasVariants && (
         <>
+          <hr />
+
           <Suspense fallback={null}>
             <VariantSelector product={product} />
           </Suspense>
@@ -87,6 +89,7 @@ export function ProductDescription({ product }: { product: Product }) {
           <hr />
         </>
       )}
+
       <div className="flex items-center justify-between">
         <Suspense fallback={null}>
           <StockIndicator product={product} />
@@ -98,6 +101,12 @@ export function ProductDescription({ product }: { product: Product }) {
           <AddToCart product={product} />
         </Suspense>
       </div>
+
+      {product.description ? (
+        <RichText className="" data={product.description} enableGutter={false} />
+      ) : null}
+
+      <hr />
     </div>
   )
 }

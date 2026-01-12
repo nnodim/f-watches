@@ -5,12 +5,12 @@ type Props = {
   format?: string
 }
 
-export const formatDateTime = ({ date, format: formatFromProps }: Props): string => {
-  if (!date) return ''
+export const formatDateTime = (input: string | Props): string => {
+  const dateValue = typeof input === 'string' ? input : input?.date
+  const formatFromProps = typeof input === 'string' ? undefined : input?.format
+
+  if (!dateValue) return ''
 
   const dateFormat = formatFromProps ?? 'dd/MM/yyyy'
-
-  const formattedDate = format(new Date(date), dateFormat)
-
-  return formattedDate
+  return format(new Date(dateValue), dateFormat)
 }
