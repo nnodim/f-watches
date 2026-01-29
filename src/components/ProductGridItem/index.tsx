@@ -37,7 +37,7 @@ export const ProductGridItem: React.FC<Props> = ({ product }) => {
       {image ? (
         <Media
           className={clsx(
-            'relative aspect-square object-cover border rounded-2xl p-8 bg-primary-foreground',
+            'relative aspect-square object-cover p-8',
           )}
           height={80}
           imgClassName={clsx('h-full w-full object-cover rounded-2xl', {
@@ -48,11 +48,11 @@ export const ProductGridItem: React.FC<Props> = ({ product }) => {
         />
       ) : null}
 
-      <div className="font-mono text-primary/50 group-hover:text-primary flex justify-between items-center mt-4">
+      <div className="font-mono text-primary flex justify-between flex-col-reverse gap-2 mt-4">
         <div>{title}</div>
 
         {typeof price === 'number' && (
-          <div className="">
+          <div className="text-primary/50">
             <Price amount={price} />
           </div>
         )}

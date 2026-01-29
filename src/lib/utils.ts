@@ -10,7 +10,7 @@ type ProcessPaymentArgs = {
   req: PayloadRequest
 }
 
-export const handlePaystackSuccess = async ({
+export const  handlePaystackSuccess = async ({
   payload,
   transaction,
   paystackData,

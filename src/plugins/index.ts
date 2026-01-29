@@ -1,6 +1,7 @@
 import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
+import { searchPlugin } from '@payloadcms/plugin-search'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
@@ -25,6 +26,9 @@ import type { UploadApiResponse } from 'cloudinary'
 import { v2 as cloudinary } from 'cloudinary'
 import { publicAccess } from '@/access/publicAccess'
 import { revalidateRedirects } from '@/hooks/revalidateRedirects'
+import { beforeSyncWithSearch } from '@/search/beforeSync'
+import { searchFields } from '@/search/fieldOverrides'
+import { OrdersCollection } from '@/collections/Orders'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -170,6 +174,16 @@ export const plugins: Plugin[] = [
       },
     },
   }),
+  searchPlugin({
+    collections: ['posts', 'products'],
+    beforeSync: beforeSyncWithSearch,
+    searchOverrides: {
+      slug: 'search',
+      fields: ({ defaultFields }) => {
+        return [...defaultFields, ...searchFields]
+      },
+    },
+  }),
   cloudStoragePlugin({
     collections: {
       media: {
@@ -240,6 +254,9 @@ export const plugins: Plugin[] = [
           webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
         }),
       ],
+    },
+    orders: {
+      ordersCollectionOverride: OrdersCollection,
     },
     products: {
       productsCollectionOverride: ProductsCollection,

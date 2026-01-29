@@ -152,7 +152,6 @@ async function page({ searchParams, params }: Props) {
           </Grid>
         ) : null}
       </div>
-      {/* --- PRODUCT GRID END --- */}
     </div>
   )
 }

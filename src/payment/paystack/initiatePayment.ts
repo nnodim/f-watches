@@ -1,5 +1,6 @@
 import { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import type { InitiatePaymentReturnType, PaystackAdapterArgs } from './index.js'
+import { Product } from '@/payload-types.js'
 
 type Props = {
   secretKey: PaystackAdapterArgs['secretKey']
@@ -7,6 +8,20 @@ type Props = {
 
 function isSupportedCurrency(currency: string): currency is 'NGN' | 'USD' {
   return currency.toUpperCase() === 'NGN' || currency.toUpperCase() === 'USD'
+}
+
+function getPriceForCurrency(
+  product: Product,
+  currency: string,
+  priceType: 'price' | 'costPrice',
+): number | undefined {
+  const key = `${priceType}In${currency.toUpperCase()}` as const
+
+  if (key in product) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (product as Record<string, any>)[key]
+  }
+  return undefined
 }
 
 export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['initiatePayment'] =
@@ -32,22 +47,29 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
 
     try {
       // 2. Prepare Data synchronously
-      const flattenedCart = cart.items.map((item) => ({
-        product: typeof item.product === 'object' ? item.product.id : item.product,
-        quantity: item.quantity,
-        variant: item.variant
-          ? typeof item.variant === 'object'
-            ? item.variant.id
-            : item.variant
-          : undefined,
-      }))
+      const flattenedCart = cart.items.map((item) => {
+        // Helper to determine if product is populated or just an ID
+        const product = item.product
+        const isProductObject = typeof product === 'object' && product !== null
+
+        return {
+          product: isProductObject ? product.id : product,
+          quantity: item.quantity,
+          variant: item.variant
+            ? typeof item.variant === 'object'
+              ? item.variant.id
+              : item.variant
+            : undefined,
+          unitPrice: isProductObject ? getPriceForCurrency(product, currency, 'price') : undefined,
+          unitCostPrice: isProductObject
+            ? getPriceForCurrency(product, currency, 'costPrice')
+            : undefined,
+        }
+      })
 
       const reference = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
       // 3. Parallel Execution: Paystack Init + Payload Transaction Creation
-
-      // We can create the local transaction record WHILE waiting for Paystack.
-      // If Paystack fails, we can delete the transaction or mark it failed, but usually, we want the record regardless.
 
       const paystackBody = {
         email: customerEmail,
@@ -57,6 +79,7 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
         callback_url: `${req.protocol}://${req.host}/api/payments/paystack/callback`,
         metadata: {
           cartID: cart.id,
+          // This snapshot now includes the costPrice for each item
           cartItemsSnapshot: JSON.stringify(flattenedCart),
           shippingAddress: JSON.stringify(shippingAddressFromData),
           custom_fields: [
@@ -90,13 +113,11 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
             currency: isSupportedCurrency(currency)
               ? (currency.toUpperCase() as 'NGN' | 'USD')
               : null,
-            items: flattenedCart,
+            items: flattenedCart, // Note: Transaction schema must allow 'costPrice' in items, or this field will be stripped here (but still present in Paystack metadata)
             paymentMethod: 'paystack',
             status: 'pending',
             paystack: {
               reference: reference,
-              // Note: We don't have accessCode yet, we update it after init if strict strictness is needed,
-              // but usually reference is enough for correlation.
             },
           },
         }),
@@ -104,17 +125,11 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
 
       if (!initializeResponse.ok) {
         const errorData = await initializeResponse.json()
-        // Rollback transaction if Paystack fails (optional, but good for data hygiene)
         await payload.delete({ collection: 'transactions', id: transaction.id })
         throw new Error(`Paystack initialization failed: ${errorData.message}`)
       }
 
       const initializeData = await initializeResponse.json()
-
-      // Optional: Update the transaction with the Paystack Access Code/Customer Code if absolutely necessary
-      // However, for speed, we often skip this write as the Webhook will update the transaction later.
-      // If you strictly need the access code in DB now:
-      // await payload.update({ collection: 'transactions', id: transaction.id, data: { paystack: { accessCode: initializeData.data.access_code }}})
 
       const returnData: InitiatePaymentReturnType = {
         accessCode: initializeData.data.access_code,

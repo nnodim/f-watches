@@ -7,6 +7,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 import PageClient from './page.client'
+import { Post } from '@/payload-types'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -48,7 +49,7 @@ export default async function Page() {
         />
       </div>
 
-      <CollectionArchive posts={posts.docs} />
+      <CollectionArchive posts={posts.docs as Post[]} />
 
       <div className="container">
         {posts.totalPages > 1 && posts.page && (

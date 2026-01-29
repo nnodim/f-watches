@@ -20,6 +20,8 @@ import {
 import { usePathname } from 'next/navigation'
 import { cn } from '@/utilities/cn'
 import { Logo } from '../Logo/Logo'
+import { SearchIcon } from 'lucide-react'
+import { Button } from '../ui/button'
 
 type Props = {
   header: Header
@@ -98,6 +100,15 @@ export function HeaderClient({ header }: Props) {
           </div>
 
           <div className="flex justify-end md:w-1/3 gap-4">
+            <Link href="/search">
+              <Button
+                variant="nav"
+                size="clear"
+                className="navLink relative items-end hover:cursor-pointer"
+              >
+                <span>Search</span>
+              </Button>
+            </Link>
             <Suspense fallback={<OpenCartButton />}>
               <Cart />
             </Suspense>

@@ -32,7 +32,7 @@ export const Price = ({
   currencyCode: currencyCodeFromProps,
   as = 'p',
 }: Props & React.ComponentProps<'p'>) => {
-  const { formatCurrency, supportedCurrencies } = useCurrency()
+  const { supportedCurrencies } = useCurrency() // We don't need formatCurrency anymore
 
   const Element = as
 
@@ -40,13 +40,31 @@ export const Price = ({
     if (currencyCodeFromProps) {
       return supportedCurrencies.find((currency) => currency.code === currencyCodeFromProps)
     }
-    return undefined
+    // Fallback to the first available currency or handle undefined
+    return supportedCurrencies?.[0]
   }, [currencyCodeFromProps, supportedCurrencies])
+
+  // --- NEW CUSTOM FORMATTER ---
+  const customFormat = (value: number) => {
+    if (!currencyToUse) return value.toString()
+
+    // 1. Convert base units (cents) to decimals (dollars)
+    const decimalValue = value / Math.pow(10, currencyToUse.decimals)
+
+    // 2. Format with commas using toLocaleString
+    // 'en-US' ensures commas are used for thousands. You can change this locale.
+    const formattedNumber = decimalValue.toLocaleString('en-US', {
+      minimumFractionDigits: currencyToUse.decimals,
+      maximumFractionDigits: currencyToUse.decimals,
+    })
+
+    return `${currencyToUse.symbol}${formattedNumber}`
+  }
 
   if (typeof amount === 'number') {
     return (
       <Element className={className} suppressHydrationWarning>
-        {formatCurrency(amount, { currency: currencyToUse })}
+        {customFormat(amount)}
       </Element>
     )
   }
@@ -54,7 +72,7 @@ export const Price = ({
   if (highestAmount && highestAmount !== lowestAmount) {
     return (
       <Element className={className} suppressHydrationWarning>
-        {`${formatCurrency(lowestAmount, { currency: currencyToUse })} - ${formatCurrency(highestAmount, { currency: currencyToUse })}`}
+        {`${customFormat(lowestAmount)} - ${customFormat(highestAmount)}`}
       </Element>
     )
   }
@@ -62,7 +80,7 @@ export const Price = ({
   if (lowestAmount) {
     return (
       <Element className={className} suppressHydrationWarning>
-        {`${formatCurrency(lowestAmount, { currency: currencyToUse })}`}
+        {customFormat(lowestAmount)}
       </Element>
     )
   }
