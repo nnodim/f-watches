@@ -1091,7 +1091,8 @@ export interface Address {
     | 'SI'
     | 'ES'
     | 'SE'
-    | 'CH';
+    | 'CH'
+    | 'NG';
   phone?: string | null;
   updatedAt: string;
   createdAt: string;

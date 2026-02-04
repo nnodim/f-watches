@@ -107,7 +107,7 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
             <Carousel opts={{ align: 'start' }} className="w-full">
               <CarouselContent>
                 {(docs as Product[]).map((product) => (
-                  <CarouselItem key={product.id} className="sm:basis-1/2 lg:basis-1/3">
+                  <CarouselItem key={product.id} className="sm:basis-1/3 lg:basis-1/4">
                     <div className="p-1">
                       <ProductGridItem product={product} />
                     </div>
@@ -119,7 +119,7 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
             </Carousel>
           </div>
         ) : (
-          <Grid className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Grid className="container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {(docs as Product[]).map((product) => (
               <ProductGridItem key={product.id} product={product} />
             ))}

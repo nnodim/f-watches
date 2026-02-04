@@ -9,6 +9,7 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { PayloadRequest, Plugin } from 'payload'
 
 import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
+import { defaultCountries } from '@payloadcms/plugin-ecommerce/client/react'
 
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
@@ -260,6 +261,9 @@ export const plugins: Plugin[] = [
     },
     products: {
       productsCollectionOverride: ProductsCollection,
+    },
+    addresses: {
+      supportedCountries: [...defaultCountries, { label: 'Nigeria', value: 'NG' }],
     },
     currencies: currenciesConfig,
   }),

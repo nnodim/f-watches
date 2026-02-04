@@ -17,6 +17,7 @@ import { MenuIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
+import { links } from './index.client'
 
 interface Props {
   menu: Header['navItems']
@@ -52,22 +53,34 @@ export function MobileMenu({ menu }: Props) {
       </SheetTrigger>
 
       <SheetContent side="left" className="px-4">
-        <SheetHeader className="px-0 pt-4 pb-0">
+        <SheetHeader className="px-0 pt-4 pb-0 sr-only">
           <SheetTitle>My Store</SheetTitle>
 
           <SheetDescription />
         </SheetHeader>
 
-        <div className="py-4">
+        <div className="pt-4">
           {menu?.length ? (
             <ul className="flex w-full flex-col">
               {menu.map((item) => (
                 <li className="py-2" key={item.id}>
-                  <CMSLink {...item.link} appearance="link" />
+                  <CMSLink {...item.link} className="text-base" appearance="link" />
                 </li>
               ))}
             </ul>
           ) : null}
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold">Shop</h2>
+          <hr className="mb-4" />
+          <ul className="flex flex-col gap-3">
+            {links.map((link, i) => (
+              <li key={i}>
+                <Link href={link.href}>{link.title}</Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {user ? (
@@ -93,8 +106,7 @@ export function MobileMenu({ menu }: Props) {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl mb-4">My account</h2>
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex flex-col items-center gap-2 mt-4">
               <Button asChild className="w-full" variant="outline">
                 <Link href="/login">Log in</Link>
               </Button>

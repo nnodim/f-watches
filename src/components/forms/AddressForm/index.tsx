@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAddresses } from '@payloadcms/plugin-ecommerce/client/react'
-import { defaultCountries as supportedCountries } from '@payloadcms/plugin-ecommerce/client/react'
+import { defaultCountries } from '@payloadcms/plugin-ecommerce/client/react'
 import { Address, Config } from '@/payload-types'
 import {
   Select,
@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button'
 import { deepMergeSimple } from 'payload/shared'
 import { FormError } from '@/components/forms/FormError'
 import { FormItem } from '@/components/forms/FormItem'
+
+const supportedCountries = [...defaultCountries, { label: 'Nigeria', value: 'NG' }]
 
 type AddressFormValues = {
   title?: string | null
@@ -199,7 +201,7 @@ export const AddressForm: React.FC<Props> = ({
               <SelectValue placeholder="Country" />
             </SelectTrigger>
             <SelectContent>
-              {supportedCountries.map((country) => {
+              {supportedCountries.sort((a, b) => a.label.localeCompare(b.label)).map((country) => {
                 const value = typeof country === 'string' ? country : country.value
                 const label =
                   typeof country === 'string'
