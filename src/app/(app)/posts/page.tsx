@@ -53,7 +53,12 @@ export default async function Page() {
 
       <div className="container">
         {posts.totalPages > 1 && posts.page && (
-          <Pagination page={posts.page} totalPages={posts.totalPages} />
+          <Pagination 
+            page={posts.page} 
+            totalPages={posts.totalPages}
+            useQueryParams={false}
+            basePath="/posts/page"
+          />
         )}
       </div>
     </div>
@@ -62,6 +67,7 @@ export default async function Page() {
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Payload Website Template Posts`,
+    title: `Read our latest blog posts`,
+    description: `Explore our collection of blog posts covering various topics and insights. Stay updated with the latest news and trends in our industry.`,
   }
 }

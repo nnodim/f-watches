@@ -2,17 +2,18 @@ import configPromise from '@payload-config'
 import { getPayload, Where } from 'payload'
 
 import { Grid } from '@/components/Grid'
+import { Pagination } from '@/components/Pagination'
 import { ProductGridItem } from '@/components/ProductGridItem'
-// New Imports for the Sidebar
-import { Accordion, AccordionItem } from '@/components/ui/accordion'
 import Categories from '@/components/layout/search/Categories'
 import Models from '@/components/layout/search/Models'
 import { FilterList } from '@/components/layout/search/filter'
+import { Accordion, AccordionItem } from '@/components/ui/accordion'
 import { sorting } from '@/lib/constants'
 
 export const metadata = {
-  description: 'Search for products in the store.',
-  title: 'Shop',
+  description:
+    'Discover our extensive collection of watches, featuring the latest styles and timeless classics. Shop now for the perfect timepiece that suits your taste.',
+  title: 'Shop all Watches at Fwatches  Styles for Everyone',
 }
 
 type SearchParams = { [key: string]: string | string[] | undefined }
@@ -23,8 +24,11 @@ type Props = {
 }
 
 async function page({ searchParams, params }: Props) {
-  const { q: searchValue, sort, category: categoryId, model } = await searchParams
+  const { q: searchValue, sort, category: categoryId, model, page: pageParam } = await searchParams
   const { slug } = await params
+
+  const currentPage = pageParam ? parseInt(pageParam as string) : 1
+  const ITEMS_PER_PAGE = 12
 
   const payload = await getPayload({ config: configPromise })
 
@@ -92,6 +96,8 @@ async function page({ searchParams, params }: Props) {
     collection: 'products',
     draft: false,
     overrideAccess: false,
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
     select: {
       title: true,
       slug: true,
@@ -99,7 +105,7 @@ async function page({ searchParams, params }: Props) {
       categories: true,
       priceInNGN: true,
     },
-    sort: (sort as string) || 'title',
+    sort: (sort as string) || '-createdAt',
     where: {
       and: whereConditions,
     },
@@ -108,7 +114,6 @@ async function page({ searchParams, params }: Props) {
   const resultsText = products.docs.length > 1 ? 'results' : 'result'
 
   return (
-    // This container wraps the Sidebar (left) and the Grid (right)
     <div className="container flex flex-col md:flex-row items-start justify-between gap-16 md:gap-10 mt-8">
       {/* --- SIDEBAR START --- */}
       <div className="w-full flex-none flex flex-col gap-4 md:gap-8 basis-1/5">
@@ -145,11 +150,22 @@ async function page({ searchParams, params }: Props) {
         )}
 
         {products?.docs.length > 0 ? (
-          <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.docs.map((product) => {
-              return <ProductGridItem key={product.id} product={product} />
-            })}
-          </Grid>
+          <>
+            <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.docs.map((product) => {
+                return <ProductGridItem key={product.id} product={product} />
+              })}
+            </Grid>
+
+            {/* Add Pagination */}
+            {products.totalPages > 1 && (
+              <Pagination
+                page={products.page ?? 1}
+                totalPages={products.totalPages}
+                useQueryParams={true}
+              />
+            )}
+          </>
         ) : null}
       </div>
     </div>

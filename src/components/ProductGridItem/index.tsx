@@ -37,7 +37,7 @@ export const ProductGridItem: React.FC<Props> = ({ product }) => {
       {image ? (
         <Media
           className={clsx(
-            'relative aspect-square object-cover p-8',
+            'relative aspect-square object-cover p-4 md:p-8',
           )}
           height={80}
           imgClassName={clsx('h-full w-full object-cover rounded-2xl', {

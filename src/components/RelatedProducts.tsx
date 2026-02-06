@@ -38,9 +38,10 @@ export default function RelatedProducts({
     <div>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {products.map((product) => (
-          <li className="aspect-square flex-none w-20" key={product.id}>
+          <li className="" key={product.id}>
             <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
               <MediaComponent
+                className="aspect-square w-20"
                 imgClassName={'w-full h-full object-cover border rounded-lg'}
                 resource={product.meta?.image as Media}
               />

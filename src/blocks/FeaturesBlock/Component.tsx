@@ -24,7 +24,7 @@ const features = [
 export const FeaturesBlock: React.FC<FeaturesBlockProps> = () => {
   return (
     <div className="container flex items-center justify-center py-16 bg-background">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 text-center uppercase">
           {features.map((feature) => (
             <div

@@ -54,9 +54,9 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
       collection: relationTo || 'posts',
       depth: 1,
       limit,
-      ...(Object.keys(where).length
-        ? { where: { and: [where, { _status: { equals: 'published' } }] } }
-        : {}),
+      where: Object.keys(where).length
+        ? { and: [where, { _status: { equals: 'published' } }] }
+        : { _status: { equals: 'published' } },
     })
 
     docs = fetchedDocs.docs

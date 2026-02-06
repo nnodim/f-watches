@@ -103,10 +103,9 @@ export function ProductDescription({ product }: { product: Product }) {
       </div>
 
       {product.description ? (
-        <RichText className="font-mono" data={product.description} enableGutter={false} />
+        <RichText data={product.description} enableGutter={false} />
       ) : null}
 
-      <hr />
     </div>
   )
 }
