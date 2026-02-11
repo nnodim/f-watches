@@ -8,12 +8,14 @@ export interface AnalyticsOverview {
   totalOrders: number
   totalProducts: number
   totalCustomers: number
+  totalItemsSold: number
   revenueChange: number
   profitChange: number
   expensesChange: number
   ordersChange: number
   productsChange: number
   customersChange: number
+  itemsSoldChange: number
 }
 
 export interface ExpenseByCategory {
@@ -39,6 +41,7 @@ export type OrderStatusData = {
 }
 
 export interface TopProduct {
+  id: string
   name: string
   sales: number
   revenue: number

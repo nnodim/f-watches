@@ -72,6 +72,9 @@ export const analyticsEndpoint: Endpoint = {
       previousStartDate.setDate(previousStartDate.getDate() - days)
       const previousStartDateStr = previousStartDate.toISOString()
 
+      let totalItemsSold = 0
+      let previousItemsSold = 0
+
       // 1) Run independent queries in parallel
       const [
         currentOrdersRes,
@@ -203,7 +206,7 @@ export const analyticsEndpoint: Endpoint = {
 
       const productMetrics = new Map<
         string,
-        { name: string; sales: number; revenue: number; cost: number; profit: number }
+        { id: string; name: string; sales: number; revenue: number; cost: number; profit: number }
       >()
 
       const customerMetrics = new Map<
@@ -231,6 +234,7 @@ export const analyticsEndpoint: Endpoint = {
             const product = productId ? productsMap.get(productId) : undefined
 
             const qty = item.quantity || 1
+            totalItemsSold += qty
             const { unitPrice, unitCost } = getItemUnitAmounts(item, product, orderCurrency)
 
             const itemRevenue = unitPrice * qty
@@ -243,6 +247,7 @@ export const analyticsEndpoint: Endpoint = {
             const key = productId || 'unknown'
             if (!productMetrics.has(key)) {
               productMetrics.set(key, {
+                id: product?.id || 'unknown',
                 name: product?.title || 'Unknown',
                 sales: 0,
                 revenue: 0,
@@ -337,6 +342,7 @@ export const analyticsEndpoint: Endpoint = {
             const product = productId ? productsMap.get(productId) : undefined
 
             const qty = item.quantity || 1
+            previousItemsSold += qty
             const { unitCost } = getItemUnitAmounts(item, product, orderCurrency)
             orderCost += unitCost * qty
           })
@@ -451,6 +457,11 @@ export const analyticsEndpoint: Endpoint = {
             )
           : 0
 
+      const itemsSoldChange =
+        previousItemsSold > 0
+          ? Math.round(((totalItemsSold - previousItemsSold) / previousItemsSold) * 100)
+          : 0
+
       const netProfit = totalGrossProfit - totalExpenses
 
       const analyticsData: AnalyticsData = {
@@ -470,6 +481,8 @@ export const analyticsEndpoint: Endpoint = {
           ordersChange,
           productsChange: 0,
           customersChange,
+          totalItemsSold,
+          itemsSoldChange,
         },
         revenueData,
         orderStatusData,

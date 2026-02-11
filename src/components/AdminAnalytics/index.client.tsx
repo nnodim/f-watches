@@ -200,6 +200,8 @@ export const AnalyticsClient: React.FC = () => {
       ordersChange: 0,
       productsChange: 0,
       customersChange: 0,
+      totalItemsSold: 0,
+      itemsSoldChange: 0,
     },
     revenueData: [],
     orderStatusData: [],
@@ -311,6 +313,15 @@ export const AnalyticsClient: React.FC = () => {
             change={analytics.overview.ordersChange}
             icon={ShoppingCart}
             color="#f59e0b"
+          />
+        </Link>
+        <Link href="/admin/collections/products">
+          <StatCard
+            title="Items Sold"
+            value={analytics.overview.totalItemsSold.toLocaleString()}
+            change={analytics.overview.itemsSoldChange}
+            icon={ShoppingCart}
+            color="#0ea5e9"
           />
         </Link>
         <StatCard
@@ -445,7 +456,9 @@ export const AnalyticsClient: React.FC = () => {
             <tbody>
               {analytics.topProducts.map((product: TopProduct, index: number) => (
                 <tr key={index}>
-                  <td style={{ ...styles.td, fontWeight: 500 }}>{product.name}</td>
+                  <td style={{ ...styles.td, fontWeight: 500 }}>
+                    <Link href={`/admin/collections/products/${product.id}`}>{product.name}</Link>
+                  </td>
                   <td style={styles.td}>{product.sales}</td>
                   <td style={styles.td}>{formatCurrency(product.revenue)}</td>
                   <td style={product.profit >= 0 ? styles.profitPositive : styles.profitNegative}>
