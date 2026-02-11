@@ -44,12 +44,15 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
     }
 
     if (relationTo === 'products') {
+      where.inventory = { greater_than: 0 }
+
       if (filterType === 'featured') where.isFeatured = { equals: true }
       if (filterType === 'onSale') where.isOnSale = { equals: true }
       if (filterType === 'new-arrival')
-        where.createdAt = { greater_than: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }
+        where.createdAt = {
+          greater_than: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+        }
     }
-
     const fetchedDocs = await payload.find({
       collection: relationTo || 'posts',
       depth: 1,

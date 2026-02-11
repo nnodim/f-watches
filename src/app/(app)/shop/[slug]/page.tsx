@@ -37,6 +37,9 @@ async function page({ searchParams, params }: Props) {
       _status: {
         equals: 'published',
       },
+      inventory: {
+        greater_than: 0,
+      }
     },
   ]
 

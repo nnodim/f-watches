@@ -17,7 +17,7 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
-  Wallet
+  Wallet,
 } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
@@ -35,6 +35,7 @@ import {
   YAxis,
 } from 'recharts'
 import { DashboardSkeleton } from '../DashboardSkeleton'
+import Link from 'next/link'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
 
@@ -287,13 +288,15 @@ export const AnalyticsClient: React.FC = () => {
           icon={Wallet}
           color="#10b981"
         />
-        <StatCard
-          title="Expenses"
-          value={formatCurrency(analytics.overview.totalExpenses)}
-          change={analytics.overview.expensesChange}
-          icon={CreditCard}
-          color="#ef4444"
-        />
+        <Link href="/admin/collections/expenses">
+          <StatCard
+            title="Expenses"
+            value={formatCurrency(analytics.overview.totalExpenses)}
+            change={analytics.overview.expensesChange}
+            icon={CreditCard}
+            color="#ef4444"
+          />
+        </Link>
         <StatCard
           title="Net Margin"
           value={`${analytics.overview.profitMargin.toFixed(1)}%`}
@@ -301,13 +304,15 @@ export const AnalyticsClient: React.FC = () => {
           icon={Percent}
           color="#8b5cf6"
         />
-        <StatCard
-          title="Total Orders"
-          value={analytics.overview.totalOrders.toLocaleString()}
-          change={analytics.overview.ordersChange}
-          icon={ShoppingCart}
-          color="#f59e0b"
-        />
+        <Link href="/admin/collections/orders">
+          <StatCard
+            title="Total Orders"
+            value={analytics.overview.totalOrders.toLocaleString()}
+            change={analytics.overview.ordersChange}
+            icon={ShoppingCart}
+            color="#f59e0b"
+          />
+        </Link>
         <StatCard
           title="Customers"
           value={analytics.overview.totalCustomers.toLocaleString()}
