@@ -55,6 +55,8 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
     }
     const fetchedDocs = await payload.find({
       collection: relationTo || 'posts',
+      draft: false,
+      overrideAccess: false,
       depth: 1,
       limit,
       where: Object.keys(where).length

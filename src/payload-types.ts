@@ -74,6 +74,7 @@ export interface Config {
   collections: {
     users: User;
     expenses: Expense;
+    'discount-codes': DiscountCode;
     pages: Page;
     posts: Post;
     postCategories: PostCategory;
@@ -113,6 +114,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
+    'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     postCategories: PostCategoriesSelect<false> | PostCategoriesSelect<true>;
@@ -149,9 +151,7 @@ export interface Config {
     footer: FooterSelect<false> | FooterSelect<true>;
   };
   locale: null;
-  user: User & {
-    collection: 'users';
-  };
+  user: User;
   jobs: {
     tasks: {
       schedulePublish: TaskSchedulePublish;
@@ -239,6 +239,7 @@ export interface User {
       }[]
     | null;
   password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -251,6 +252,8 @@ export interface Order {
         product?: (string | null) | Product;
         variant?: (string | null) | Variant;
         quantity: number;
+        unitOriginalPrice?: number | null;
+        unitDiscount?: number | null;
         unitPrice?: number | null;
         unitCostPrice?: number | null;
         id?: string | null;
@@ -275,6 +278,7 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: ('NGN' | 'USD') | null;
+  shippingFee?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -309,6 +313,11 @@ export interface Product {
     | null;
   layout?: (CallToActionBlock | ContentBlock | MediaBlock)[] | null;
   model: string;
+  saleEnabled?: boolean | null;
+  saleStart?: string | null;
+  saleEnd?: string | null;
+  salePriceInNGN?: number | null;
+  salePriceInUSD?: number | null;
   inventory?: number | null;
   enableVariants?: boolean | null;
   variantTypes?: (string | VariantType)[] | null;
@@ -330,6 +339,10 @@ export interface Product {
    */
   costPriceInUSD?: number | null;
   isFeatured?: boolean | null;
+  /**
+   * Automatically set when sale pricing is active.
+   */
+  isOnSale?: boolean | null;
   relatedProducts?: (string | Product)[] | null;
   meta?: {
     title?: string | null;
@@ -957,6 +970,11 @@ export interface Variant {
   priceInNGN?: number | null;
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
+  saleEnabled?: boolean | null;
+  saleStart?: string | null;
+  saleEnd?: string | null;
+  salePriceInNGN?: number | null;
+  salePriceInUSD?: number | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1032,6 +1050,38 @@ export interface Cart {
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
   currency?: ('NGN' | 'USD') | null;
+  discountCode?: (string | null) | DiscountCode;
+  discountReason?: string | null;
+  discountAmountInNGN?: number | null;
+  discountAmountInUSD?: number | null;
+  total?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes".
+ */
+export interface DiscountCode {
+  id: string;
+  name?: string | null;
+  code: string;
+  active?: boolean | null;
+  type: 'percentage' | 'fixed' | 'free_shipping';
+  percentage?: number | null;
+  amountInNGN?: number | null;
+  amountInUSD?: number | null;
+  appliesTo: 'order' | 'products';
+  products?: (string | Product)[] | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  minSubtotalInNGN?: number | null;
+  minSubtotalInUSD?: number | null;
+  /**
+   * Maximum number of times this code can be used.
+   */
+  maxUses?: number | null;
+  uses?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1051,48 +1101,7 @@ export interface Address {
   city?: string | null;
   state?: string | null;
   postalCode?: string | null;
-  country:
-    | 'US'
-    | 'GB'
-    | 'CA'
-    | 'AU'
-    | 'AT'
-    | 'BE'
-    | 'BR'
-    | 'BG'
-    | 'CY'
-    | 'CZ'
-    | 'DK'
-    | 'EE'
-    | 'FI'
-    | 'FR'
-    | 'DE'
-    | 'GR'
-    | 'HK'
-    | 'HU'
-    | 'IN'
-    | 'IE'
-    | 'IT'
-    | 'JP'
-    | 'LV'
-    | 'LT'
-    | 'LU'
-    | 'MY'
-    | 'MT'
-    | 'MX'
-    | 'NL'
-    | 'NZ'
-    | 'NO'
-    | 'PL'
-    | 'PT'
-    | 'RO'
-    | 'SG'
-    | 'SK'
-    | 'SI'
-    | 'ES'
-    | 'SE'
-    | 'CH'
-    | 'NG';
+  country: 'NG';
   phone?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1383,6 +1392,10 @@ export interface PayloadLockedDocument {
         value: string | Expense;
       } | null)
     | ({
+        relationTo: 'discount-codes';
+        value: string | DiscountCode;
+      } | null)
+    | ({
         relationTo: 'pages';
         value: string | Page;
       } | null)
@@ -1531,6 +1544,29 @@ export interface ExpensesSelect<T extends boolean = true> {
   category?: T;
   date?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes_select".
+ */
+export interface DiscountCodesSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  active?: T;
+  type?: T;
+  percentage?: T;
+  amountInNGN?: T;
+  amountInUSD?: T;
+  appliesTo?: T;
+  products?: T;
+  startsAt?: T;
+  endsAt?: T;
+  minSubtotalInNGN?: T;
+  minSubtotalInUSD?: T;
+  maxUses?: T;
+  uses?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2023,6 +2059,11 @@ export interface VariantsSelect<T extends boolean = true> {
   priceInNGN?: T;
   priceInUSDEnabled?: T;
   priceInUSD?: T;
+  saleEnabled?: T;
+  saleStart?: T;
+  saleEnd?: T;
+  salePriceInNGN?: T;
+  salePriceInUSD?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2075,6 +2116,11 @@ export interface ProductsSelect<T extends boolean = true> {
         mediaBlock?: T | MediaBlockSelect<T>;
       };
   model?: T;
+  saleEnabled?: T;
+  saleStart?: T;
+  saleEnd?: T;
+  salePriceInNGN?: T;
+  salePriceInUSD?: T;
   inventory?: T;
   enableVariants?: T;
   variantTypes?: T;
@@ -2086,6 +2132,7 @@ export interface ProductsSelect<T extends boolean = true> {
   costPriceInNGN?: T;
   costPriceInUSD?: T;
   isFeatured?: T;
+  isOnSale?: T;
   relatedProducts?: T;
   meta?:
     | T
@@ -2121,6 +2168,11 @@ export interface CartsSelect<T extends boolean = true> {
   status?: T;
   subtotal?: T;
   currency?: T;
+  discountCode?: T;
+  discountReason?: T;
+  discountAmountInNGN?: T;
+  discountAmountInUSD?: T;
+  total?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2135,6 +2187,8 @@ export interface OrdersSelect<T extends boolean = true> {
         product?: T;
         variant?: T;
         quantity?: T;
+        unitOriginalPrice?: T;
+        unitDiscount?: T;
         unitPrice?: T;
         unitCostPrice?: T;
         id?: T;
@@ -2160,6 +2214,7 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  shippingFee?: T;
   updatedAt?: T;
   createdAt?: T;
 }

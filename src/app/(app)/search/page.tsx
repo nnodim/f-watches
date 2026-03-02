@@ -60,8 +60,6 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
       : {}),
   })
 
-  console.log(posts)
-
   return (
     <div className="pt-24 pb-24">
       <PageClient />

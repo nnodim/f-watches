@@ -9,7 +9,6 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { PayloadRequest, Plugin } from 'payload'
 
 import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
-import { defaultCountries } from '@payloadcms/plugin-ecommerce/client/react'
 
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
@@ -30,6 +29,8 @@ import { revalidateRedirects } from '@/hooks/revalidateRedirects'
 import { beforeSyncWithSearch } from '@/search/beforeSync'
 import { searchFields } from '@/search/fieldOverrides'
 import { OrdersCollection } from '@/collections/Orders'
+import { CartsCollection } from '@/collections/Carts'
+import { VariantsCollection } from '@/collections/Variants'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -71,8 +72,6 @@ export const cloudinaryAdapter = () => ({
   },
 
   async handleDelete({ filename }: Parameters<HandleDelete>[0]) {
-    console.log('handleDelete has been called')
-
     // if filename is present then we will look for that file
     try {
       // We remove the file extension from the filename and then target the file
@@ -210,6 +209,7 @@ export const plugins: Plugin[] = [
     },
     carts: {
       allowGuestCarts: true,
+      cartsCollectionOverride: CartsCollection,
     },
     customers: {
       slug: 'users',
@@ -261,9 +261,12 @@ export const plugins: Plugin[] = [
     },
     products: {
       productsCollectionOverride: ProductsCollection,
+      variants: {
+        variantsCollectionOverride: VariantsCollection,
+      },
     },
     addresses: {
-      supportedCountries: [...defaultCountries, { label: 'Nigeria', value: 'NG' }],
+      supportedCountries: [{ label: 'Nigeria', value: 'NG' }],
     },
     currencies: currenciesConfig,
   }),

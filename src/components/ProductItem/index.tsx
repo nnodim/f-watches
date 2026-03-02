@@ -1,9 +1,6 @@
 import { Media } from '@/components/Media'
-import { OrderStatus } from '@/components/OrderStatus'
 import { Price } from '@/components/Price'
-import { Button } from '@/components/ui/button'
-import { Media as MediaType, Order, Product, Variant } from '@/payload-types'
-import { formatDateTime } from '@/utilities/formatDateTime'
+import { Product, Variant } from '@/payload-types'
 import Link from 'next/link'
 
 type Props = {
@@ -11,6 +8,7 @@ type Props = {
   style?: 'compact' | 'default'
   variant?: Variant
   quantity?: number
+  price?: number | null
   /**
    * Force all formatting to a particular currency.
    */
@@ -23,6 +21,7 @@ export const ProductItem: React.FC<Props> = ({
   quantity,
   variant,
   currencyCode,
+  price,
 }) => {
   const { title } = product
 
@@ -55,7 +54,7 @@ export const ProductItem: React.FC<Props> = ({
     }
   }
 
-  const itemPrice = variant?.priceInNGN || product.priceInNGN
+  const itemPrice = variant?.priceInNGN || price
   const itemURL = `/products/${product.slug}${variant ? `?variant=${variant.id}` : ''}`
 
   return (
@@ -73,7 +72,7 @@ export const ProductItem: React.FC<Props> = ({
             <Link href={itemURL}>{title}</Link>
           </p>
           {variant && (
-            <p className="text-sm font-mono text-primary/50 tracking-[0.1em]">
+            <p className="text-sm font-mono text-primary/50 tracking-widest">
               {variant.options
                 ?.map((option) => {
                   if (typeof option === 'object') return option.label

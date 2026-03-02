@@ -40,11 +40,9 @@ export const Price = ({
     if (currencyCodeFromProps) {
       return supportedCurrencies.find((currency) => currency.code === currencyCodeFromProps)
     }
-    // Fallback to the first available currency or handle undefined
     return supportedCurrencies?.[0]
   }, [currencyCodeFromProps, supportedCurrencies])
 
-  // --- NEW CUSTOM FORMATTER ---
   const customFormat = (value: number) => {
     if (!currencyToUse) return value.toString()
 
@@ -53,8 +51,11 @@ export const Price = ({
 
     // 2. Format with commas using toLocaleString
     // 'en-US' ensures commas are used for thousands. You can change this locale.
+    const baseUnit = Math.pow(10, currencyToUse.decimals)
+    const hasFraction = value % baseUnit !== 0
+
     const formattedNumber = decimalValue.toLocaleString('en-US', {
-      minimumFractionDigits: currencyToUse.decimals,
+      minimumFractionDigits: hasFraction ? currencyToUse.decimals : 0,
       maximumFractionDigits: currencyToUse.decimals,
     })
 

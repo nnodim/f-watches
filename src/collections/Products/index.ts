@@ -21,9 +21,15 @@ import {
 import { DefaultDocumentIDType, Where } from 'payload'
 import { costPricesField } from '@/components/Fields/costPricesField'
 import { currenciesConfig } from '@/lib/constants'
+import { amountField } from '@payloadcms/plugin-ecommerce'
+import { syncSaleFlags } from '@/hooks/syncSaleFlags'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  hooks: {
+    ...(defaultCollection.hooks || {}),
+    beforeChange: [...(defaultCollection.hooks?.beforeChange || []), syncSaleFlags],
+  },
   admin: {
     ...defaultCollection?.admin,
     defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
@@ -50,9 +56,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variantOptions: true,
     variants: true,
     enableVariants: true,
+    saleEnabled: true,
     gallery: true,
     priceInUSD: true,
     priceInNGN: true,
+    salePriceInUSD: true,
+    salePriceInNGN: true,
     costPriceInNGN: true,
     costPriceInUSD: true,
     categories: true,
@@ -154,6 +163,39 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               label: 'Model',
               required: true,
             },
+            {
+              name: 'saleEnabled',
+              type: 'checkbox',
+              label: 'Enable sale pricing',
+              defaultValue: false,
+            },
+            {
+              name: 'saleStart',
+              type: 'date',
+              admin: {
+                condition: (data) => Boolean(data?.saleEnabled),
+              },
+            },
+            {
+              name: 'saleEnd',
+              type: 'date',
+              admin: {
+                condition: (data) => Boolean(data?.saleEnabled),
+              },
+            },
+            ...currenciesConfig.supportedCurrencies.map((currency) =>
+              amountField({
+                currenciesConfig,
+                currency,
+                overrides: {
+                  name: `salePriceIn${currency.code}`,
+                  label: `Sale Price (${currency.code})`,
+                  admin: {
+                    condition: (data) => Boolean(data?.saleEnabled),
+                  },
+                },
+              }),
+            ),
             ...defaultCollection.fields,
             ...costPricesField({ currenciesConfig }),
             {
@@ -161,6 +203,16 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               type: 'checkbox',
               label: 'Featured product',
               defaultValue: false,
+            },
+            {
+              name: 'isOnSale',
+              type: 'checkbox',
+              label: 'On sale',
+              defaultValue: false,
+              admin: {
+                readOnly: true,
+                description: 'Automatically set when sale pricing is active.',
+              },
             },
             {
               name: 'relatedProducts',

@@ -23,9 +23,12 @@ import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { plugins } from './plugins'
 import { analyticsEndpoint } from './endpoints/analytics'
+import { applyDiscountEndpoint } from './endpoints/discounts'
+import { paystackInitiateDiscountedEndpoint } from './endpoints/payments/paystackInitiate'
 import { Posts } from './collections/Post'
 import { PostCategories } from './collections/PostCategories'
 import { Expenses } from './collections/Expenses'
+import { DiscountCodes } from './collections/DiscountCodes'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -57,7 +60,7 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Expenses, Pages, Posts, PostCategories, Categories, Media],
+  collections: [Users, Expenses, DiscountCodes, Pages, Posts, PostCategories, Categories, Media],
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),
@@ -96,7 +99,7 @@ export default buildConfig({
       ]
     },
   }),
-  endpoints: [analyticsEndpoint],
+  endpoints: [analyticsEndpoint, applyDiscountEndpoint, paystackInitiateDiscountedEndpoint],
   globals: [Header, Footer],
   email: resendAdapter({
     defaultFromAddress: 'admin@bellissimoeee.com',

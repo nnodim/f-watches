@@ -77,7 +77,7 @@ export const Gallery2: React.FC<Props> = ({ gallery }) => {
   }, [searchParams, mainApi, gallery])
 
   return (
-    <div className="flex flex-col lg:flex-row-reverse gap-5">
+    <div className="flex flex-col gap-5">
       {/* Main Carousel */}
       <Carousel setApi={setMainApi} className="w-full" opts={{ loop: false }}>
         <CarouselContent>
@@ -95,17 +95,17 @@ export const Gallery2: React.FC<Props> = ({ gallery }) => {
 
       {/* Thumbnails Carousel */}
       <Carousel
-        key={isVertical ? 'vertical' : 'horizontal'}
+        key={'horizontal'}
         setApi={setThumbsApi}
-        className="w-full lg:w-fit"
-        orientation={isVertical ? 'vertical' : 'horizontal'}
+        className="w-full"
+        orientation={'horizontal'}
         opts={{
           align: 'start',
           containScroll: 'keepSnaps',
           dragFree: true,
         }}
       >
-        <CarouselContent className="lg:max-w-24">
+        <CarouselContent className="">
           {gallery.map((item, i) => (
             <CarouselItem
               className="basis-1/3 lg:basis-1/5 cursor-pointer"
