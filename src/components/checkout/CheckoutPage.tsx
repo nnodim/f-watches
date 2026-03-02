@@ -16,27 +16,36 @@ import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
 import { FormItem } from '@/components/forms/FormItem'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Address } from '@/payload-types'
-import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Address, Cart } from '@/payload-types'
+import {
+  useAddresses,
+  useCart,
+  usePayments,
+  useCurrency,
+} from '@payloadcms/plugin-ecommerce/client/react'
 import { toast } from 'sonner'
+import { getEffectivePrice } from '@/lib/pricing'
+import { getNigeriaShippingFee } from '@/lib/shipping'
 
 export const CheckoutPage: React.FC = () => {
   const { user } = useAuth()
   const router = useRouter()
-  const { cart, clearCart } = useCart()
+  const { cart, isLoading, clearCart, refreshCart } = useCart()
+  const { currency } = useCurrency()
   const [error, setError] = useState<null | string>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
 
-  /**
-   * State to manage the email input for guest checkout.
-   */
   const [email, setEmail] = useState('')
   const [emailEditable, setEmailEditable] = useState(true)
-  const { initiatePayment, confirmOrder } = usePayments()
+  const { confirmOrder } = usePayments()
   const { addresses } = useAddresses()
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
   const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountError, setDiscountError] = useState<string | null>(null)
+  const [applyDiscountLoading, setApplyDiscountLoading] = useState(false)
 
   const cartIsEmpty = !cart || !cart.items || !cart.items.length
 
@@ -45,8 +54,62 @@ export const CheckoutPage: React.FC = () => {
   )
 
   const customerEmail = user?.email || email
+  const discountAmount =
+    currency.code === 'NGN' ? cart?.discountAmountInNGN : cart?.discountAmountInUSD
+  const resolvedShippingAddress = billingAddressSameAsShipping ? billingAddress : shippingAddress
+  const shippingFeeResult = getNigeriaShippingFee({
+    city: resolvedShippingAddress?.city,
+    country: resolvedShippingAddress?.country,
+    currency: currency.code,
+    state: resolvedShippingAddress?.state,
+  })
+  const shippingFee = shippingFeeResult.amount
+  const grandTotal =
+    (cart?.total || cart?.subtotal || 0) + (typeof shippingFee === 'number' ? shippingFee : 0)
+  const canPay = canGoToPayment && typeof shippingFee === 'number'
 
-  // On initial load wait for addresses to be loaded and check to see if we can prefill a default one
+  const applyDiscount = useCallback(async () => {
+    if (!cart?.id) return
+
+    setDiscountError(null)
+    setApplyDiscountLoading(true)
+
+    try {
+      const cartSecret = typeof window !== 'undefined' ? localStorage.getItem('cart_secret') : null
+
+      const response = await fetch('/api/discounts/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: discountCode,
+          cartID: cart.id,
+          secret: cartSecret || undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText)
+      }
+
+      const data = await response.json()
+
+      if (data?.message) {
+        setDiscountError(data.message)
+        toast.error(data.message)
+      } else {
+        await refreshCart()
+        toast.success('Discount code applied.')
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unable to apply discount.'
+      setDiscountError(msg)
+      toast.error(msg)
+    } finally {
+      setApplyDiscountLoading(false)
+    }
+  }, [cart?.id, discountCode, refreshCart])
+
   useEffect(() => {
     if (!shippingAddress) {
       if (addresses && addresses.length > 0) {
@@ -68,108 +131,136 @@ export const CheckoutPage: React.FC = () => {
     }
   }, [])
 
-  const initiatePaymentIntent = useCallback(
-    async (paymentID: string) => {
-      if (!customerEmail) {
-        setError('Email is required for payment')
-        return
+  const initiatePaymentIntent = useCallback(async () => {
+    if (!customerEmail) {
+      setError('Email is required for payment')
+      return
+    }
+
+    setIsProcessingPayment(true)
+    setError(null)
+
+    try {
+      const cartSecret = typeof window !== 'undefined' ? localStorage.getItem('cart_secret') : null
+
+      const response = await fetch('/api/payments/paystack/initiate-discounted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartID: cart?.id,
+          secret: cartSecret || undefined,
+          customerEmail,
+          billingAddress,
+          shippingAddress: resolvedShippingAddress,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText)
       }
 
-      setIsProcessingPayment(true)
-      setError(null)
+      const paymentData = (await response.json()) as Record<string, unknown>
 
-      try {
-        const paymentData = (await initiatePayment(paymentID, {
-          additionalData: {
-            ...(email ? { customerEmail: email } : {}),
-            billingAddress,
-            shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
-            billingAddressSameAsShipping,
-          },
-        })) as Record<string, unknown>
+      if (paymentData && paymentData.accessCode) {
+        const PaystackPop = (await import('@paystack/inline-js')).default
+        const popup = new PaystackPop()
 
-        if (paymentData && paymentData.accessCode) {
-          // Import Paystack and initiate payment
-          const PaystackPop = (await import('@paystack/inline-js')).default
-          const popup = new PaystackPop()
+        const accessCode = paymentData.accessCode as string
+        popup.resumeTransaction(accessCode, {
+          async onSuccess(tranx) {
+            try {
+              const confirmResult = await confirmOrder('paystack', {
+                additionalData: {
+                  paymentReference: tranx.reference,
+                  transactionId: tranx.transaction,
+                  customerEmail,
+                  billingAddress,
+                  shippingAddress: resolvedShippingAddress,
+                },
+              })
 
-          const accessCode = paymentData.accessCode as string
-          popup.resumeTransaction(accessCode, {
-            async onSuccess(tranx) {
-              try {
-                const confirmResult = await confirmOrder('paystack', {
-                  additionalData: {
-                    paymentReference: tranx.reference,
-                    transactionId: tranx.transaction,
-                    customerEmail,
-                    billingAddress,
-                    shippingAddress: billingAddressSameAsShipping
-                      ? billingAddress
-                      : shippingAddress,
-                  },
-                })
-
-                if (
-                  confirmResult &&
-                  typeof confirmResult === 'object' &&
-                  'orderID' in confirmResult &&
-                  confirmResult.orderID
-                ) {
-                  const redirectUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/orders/${confirmResult.orderID}${customerEmail ? `?email=${customerEmail}` : ''}`
-
-                  // Clear the cart after successful payment
-                  clearCart()
-
-                  // Show success message
-                  toast.success('Payment successful! Redirecting to your order...')
-
-                  // Redirect to order confirmation page
-                  router.push(redirectUrl)
-                }
-              } catch (err) {
-                console.log({ err })
-                const msg = err instanceof Error ? err.message : 'Something went wrong.'
-                const errorMessage = `Error while confirming order: ${msg}`
-                setError(errorMessage)
-                toast.error(errorMessage)
-              } finally {
-                setIsProcessingPayment(false)
+              if (
+                confirmResult &&
+                typeof confirmResult === 'object' &&
+                'orderID' in confirmResult &&
+                confirmResult.orderID
+              ) {
+                const redirectUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/orders/${confirmResult.orderID}${customerEmail ? `?email=${customerEmail}` : ''}`
+                clearCart()
+                toast.success('Payment successful! Redirecting to your order...')
+                router.push(redirectUrl)
               }
-            },
-            onCancel() {
+            } catch (err) {
+              console.log({ err })
+              const msg = err instanceof Error ? err.message : 'Something went wrong.'
+              const errorMessage = `Error while confirming order: ${msg}`
+              setError(errorMessage)
+              toast.error(errorMessage)
+            } finally {
               setIsProcessingPayment(false)
-              toast.info('Payment was cancelled')
-            },
-          })
-        }
-      } catch (error) {
-        console.log(error)
-
-        const errorData = error instanceof Error ? JSON.parse(error.message) : {}
-        
-        let errorMessage = `An error occurred while initiating payment.${errorData}`
-
-        if (errorData?.cause?.code === 'OutOfStock') {
-          errorMessage = 'One or more items in your cart are out of stock.'
-        }
-
-        setError(errorMessage)
-        toast.error(errorMessage)
-        setIsProcessingPayment(false)
+            }
+          },
+          onCancel() {
+            setIsProcessingPayment(false)
+            toast.info('Payment was cancelled')
+          },
+        })
       }
-    },
-    [
-      billingAddress,
-      billingAddressSameAsShipping,
-      shippingAddress,
-      email,
-      customerEmail,
-      initiatePayment,
-      confirmOrder,
-      clearCart,
-      router,
-    ],
-  )
+    } catch (error) {
+      console.log(error)
+
+      const errorData = error instanceof Error ? JSON.parse(error.message) : {}
+      let errorMessage = `An error occurred while initiating payment.${errorData}`
+
+      if (errorData?.cause?.code === 'OutOfStock') {
+        errorMessage = 'One or more items in your cart are out of stock.'
+      }
+
+      setError(errorMessage)
+      toast.error(errorMessage)
+      setIsProcessingPayment(false)
+    }
+  }, [
+    billingAddress,
+    customerEmail,
+    cart?.id,
+    resolvedShippingAddress,
+    confirmOrder,
+    clearCart,
+    router,
+  ])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-stretch justify-stretch my-8 md:flex-row grow gap-10 md:gap-6 lg:gap-8">
+        <div className="basis-full lg:basis-2/3 flex flex-col gap-8">
+          <Skeleton className="h-9 w-40 rounded-md" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-10 w-48 rounded-md" />
+        </div>
+        <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 bg-primary/5 flex flex-col gap-6 rounded-lg">
+          <Skeleton className="h-9 w-36 rounded-md" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <Skeleton className="h-20 w-20 rounded-lg shrink-0" />
+              <div className="flex flex-col gap-2 grow">
+                <Skeleton className="h-5 w-3/4 rounded" />
+                <Skeleton className="h-4 w-1/2 rounded" />
+                <Skeleton className="h-4 w-1/4 rounded" />
+              </div>
+            </div>
+          ))}
+          <Skeleton className="h-px w-full" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-px w-full" />
+          <Skeleton className="h-8 w-32 self-end rounded-md" />
+        </div>
+      </div>
+    )
+  }
 
   if (cartIsEmpty) {
     return (
@@ -186,7 +277,7 @@ export const CheckoutPage: React.FC = () => {
         <div className="basis-full lg:basis-2/3 flex flex-col gap-8 justify-stretch">
           <h2 className="font-medium text-3xl">Contact</h2>
           {!user && (
-            <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
+            <div className="bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
               <div className="prose dark:prose-invert">
                 <Button asChild className="no-underline text-inherit" variant="outline">
                   <Link href="/login">Log in</Link>
@@ -199,9 +290,9 @@ export const CheckoutPage: React.FC = () => {
             </div>
           )}
           {user ? (
-            <div className="bg-accent dark:bg-card rounded-lg p-4 ">
+            <div className="bg-accent dark:bg-card rounded-lg p-4">
               <div>
-                <p>{user.email}</p>{' '}
+                <p>{user.email}</p>
                 <p>
                   Not you?{' '}
                   <Link className="underline" href="/logout">
@@ -211,10 +302,9 @@ export const CheckoutPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-accent dark:bg-black rounded-lg p-4 ">
+            <div className="bg-accent dark:bg-black rounded-lg p-4">
               <div>
                 <p className="mb-4">Enter your email to checkout as a guest.</p>
-
                 <FormItem className="mb-6">
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -227,7 +317,6 @@ export const CheckoutPage: React.FC = () => {
                     value={email}
                   />
                 </FormItem>
-
                 <Button
                   disabled={!email || !emailEditable}
                   onClick={(e) => {
@@ -267,9 +356,7 @@ export const CheckoutPage: React.FC = () => {
           ) : (
             <CreateAddressModal
               disabled={!email || Boolean(emailEditable)}
-              callback={(address) => {
-                setBillingAddress(address)
-              }}
+              callback={(address) => setBillingAddress(address)}
               skipSubmission={true}
             />
           )}
@@ -279,9 +366,7 @@ export const CheckoutPage: React.FC = () => {
               id="shippingTheSameAsBilling"
               checked={billingAddressSameAsShipping}
               disabled={isProcessingPayment || (!user && (!email || Boolean(emailEditable)))}
-              onCheckedChange={(state) => {
-                setBillingAddressSameAsShipping(state as boolean)
-              }}
+              onCheckedChange={(state) => setBillingAddressSameAsShipping(state as boolean)}
             />
             <Label htmlFor="shippingTheSameAsBilling">Shipping is the same as billing</Label>
           </div>
@@ -314,9 +399,7 @@ export const CheckoutPage: React.FC = () => {
                 />
               ) : (
                 <CreateAddressModal
-                  callback={(address) => {
-                    setShippingAddress(address)
-                  }}
+                  callback={(address) => setShippingAddress(address)}
                   disabled={!email || Boolean(emailEditable)}
                   skipSubmission={true}
                 />
@@ -326,20 +409,25 @@ export const CheckoutPage: React.FC = () => {
 
           <Button
             className="self-start"
-            disabled={!canGoToPayment || isProcessingPayment}
+            disabled={!canPay || isProcessingPayment}
             onClick={(e) => {
               e.preventDefault()
-              void initiatePaymentIntent('paystack')
+              void initiatePaymentIntent()
             }}
           >
             {isProcessingPayment ? 'Processing Payment...' : 'Pay with Paystack'}
           </Button>
 
+          {canGoToPayment && typeof shippingFee !== 'number' && (
+            <div className="my-2">
+              <Message error={shippingFeeResult.error} />
+            </div>
+          )}
+
           {error && (
             <div className="my-8">
               <Message error={error} />
-
-              <Button
+              {/* <Button
                 onClick={(e) => {
                   e.preventDefault()
                   router.refresh()
@@ -348,7 +436,7 @@ export const CheckoutPage: React.FC = () => {
                 disabled={isProcessingPayment}
               >
                 Try again
-              </Button>
+              </Button> */}
             </div>
           )}
         </div>
@@ -356,7 +444,7 @@ export const CheckoutPage: React.FC = () => {
         {!cartIsEmpty && (
           <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 border-none bg-primary/5 flex flex-col gap-8 rounded-lg">
             <h2 className="text-3xl font-medium">Your cart</h2>
-            {cart?.items?.map((item, index) => {
+            {(cart as Cart)?.items?.map((item, index) => {
               if (typeof item.product === 'object' && item.product) {
                 const {
                   product,
@@ -368,12 +456,12 @@ export const CheckoutPage: React.FC = () => {
                 if (!quantity) return null
 
                 let image = gallery?.[0]?.image || meta?.image
-                let price = product?.priceInNGN
+                let price: number | null = null
 
                 const isVariant = Boolean(variant) && typeof variant === 'object'
 
                 if (isVariant) {
-                  price = variant?.priceInNGN
+                  price = getEffectivePrice(variant as any, currency.code).price
 
                   const imageVariant = product.gallery?.find((item) => {
                     if (!item.variantOption) return false
@@ -393,6 +481,10 @@ export const CheckoutPage: React.FC = () => {
                   if (imageVariant && typeof imageVariant.image !== 'string') {
                     image = imageVariant.image
                   }
+                }
+
+                if (!isVariant) {
+                  price = getEffectivePrice(product as any, currency.code).price
                 }
 
                 return (
@@ -422,7 +514,6 @@ export const CheckoutPage: React.FC = () => {
                           {quantity}
                         </div>
                       </div>
-
                       {typeof price === 'number' && <Price amount={price} />}
                     </div>
                   </div>
@@ -430,10 +521,80 @@ export const CheckoutPage: React.FC = () => {
               }
               return null
             })}
+
             <hr />
+
+            {/* ── Discount code section ── */}
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="discount-code">Discount code</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="discount-code"
+                  placeholder="Enter code"
+                  value={discountCode}
+                  disabled={applyDiscountLoading}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!discountCode || !cart?.id || applyDiscountLoading}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    void applyDiscount()
+                  }}
+                >
+                  {applyDiscountLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      Applying…
+                    </span>
+                  ) : (
+                    'Apply'
+                  )}
+                </Button>
+              </div>
+              {discountError && <p className="text-sm text-red-500">{discountError}</p>}
+            </div>
+
+            <hr />
+
             <div className="flex justify-between items-center gap-2">
-              <span className="uppercase">Total</span>{' '}
-              <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
+              {typeof discountAmount === 'number' && discountAmount > 0 && (
+                <span className="uppercase text-sm">Discount</span>
+              )}
+              {typeof discountAmount === 'number' && discountAmount > 0 && (
+                <Price className="text-lg font-medium" amount={discountAmount} />
+              )}
+            </div>
+            {typeof shippingFee === 'number' && (
+              <div className="flex justify-between items-center gap-2">
+                <span className="uppercase text-sm">Shipping</span>
+                <Price className="text-lg font-medium" amount={shippingFee} />
+              </div>
+            )}
+            <div className="flex justify-between items-center gap-2">
+              <span className="uppercase">Total</span>
+              <Price className="text-3xl font-medium" amount={grandTotal} />
             </div>
           </div>
         )}

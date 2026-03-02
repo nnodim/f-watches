@@ -172,6 +172,7 @@ export default async function Order({ params, searchParams }: PageProps) {
                       product={item.product}
                       quantity={item.quantity}
                       variant={variant}
+                      price={item.unitPrice}
                     />
                   </li>
                 )

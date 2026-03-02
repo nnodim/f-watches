@@ -29,7 +29,6 @@ export const confirmOrder: (props: Props) => NonNullable<PaymentAdapter>['confir
       // 2. CHECK: Has Webhook already processed this?
       // If status is 'succeeded' and order is linked, we are done. FAST EXIT.
       if (transaction.status === 'succeeded' && transaction.order) {
-        console.log('Payment confirmed successfully (via webhook)')
         return {
           message: 'Payment confirmed successfully (via webhook)',
           orderID: typeof transaction.order === 'object' ? transaction.order.id : transaction.order,
@@ -58,8 +57,6 @@ export const confirmOrder: (props: Props) => NonNullable<PaymentAdapter>['confir
       if (transaction_data.status !== 'success') {
         throw new Error('Transaction was not successful')
       }
-
-      console.log('Payment confirmation through comfirmOrder handler')
 
       // 4. Run the Shared Logic (Atomic processing)
       const result = await handlePaystackSuccess({

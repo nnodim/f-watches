@@ -34,7 +34,9 @@ const getProductPrice = (
   product: Product,
   variant: Variant | null | undefined,
   currency: 'NGN' | 'USD' = 'NGN',
+  unitPrice?: number | null,
 ): number => {
+  if (typeof unitPrice === 'number') return unitPrice
   if (variant) {
     return currency === 'NGN' ? variant.priceInNGN || 0 : variant.priceInUSD || 0
   }
@@ -56,7 +58,7 @@ const getVariantDisplay = (variant: Variant | string | null | undefined): string
 
 export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) => {
   const currency = order.currency || 'NGN'
-  const shippingFee = 0 // Add your shipping calculation logic here
+  const shippingFee = typeof (order as any).shippingFee === 'number' ? (order as any).shippingFee : 0
 
   // Ensure items is a safe array (guard against null/undefined)
   const items = order.items ?? []
@@ -68,7 +70,7 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
 
     if (!product) return sum
 
-    const price = getProductPrice(product, variant, currency)
+    const price = getProductPrice(product, variant, currency, (item as any)?.unitPrice)
     return sum + price * item.quantity
   }, 0)
 
@@ -177,7 +179,7 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
             const image = galleryItem?.image
             const imageUrl = image && typeof image !== 'string' && image.url ? image.url : ''
 
-            const price = getProductPrice(product, variant, currency)
+            const price = getProductPrice(product, variant, currency, (item as any)?.unitPrice)
             const itemTotal = price * item.quantity
             const variantDisplay = getVariantDisplay(variant)
 

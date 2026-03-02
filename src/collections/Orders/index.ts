@@ -25,6 +25,22 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
                   amountField({
                     currenciesConfig,
                     overrides: {
+                      name: 'unitOriginalPrice',
+                      label: 'Unit Original Price',
+                      defaultValue: 0,
+                    },
+                  }),
+                  amountField({
+                    currenciesConfig,
+                    overrides: {
+                      name: 'unitDiscount',
+                      label: 'Unit Discount',
+                      defaultValue: 0,
+                    },
+                  }),
+                  amountField({
+                    currenciesConfig,
+                    overrides: {
                       name: 'unitPrice',
                       label: `Unit Price`,
                       defaultValue: 0,
@@ -50,6 +66,19 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
 
   return {
     ...defaultCollection,
-    fields: nextFields,
+    fields: [
+      ...nextFields,
+      amountField({
+        currenciesConfig,
+        overrides: {
+          name: 'shippingFee',
+          label: 'Shipping Fee',
+          defaultValue: 0,
+          admin: {
+            position: 'sidebar',
+          },
+        },
+      }),
+    ],
   }
 }

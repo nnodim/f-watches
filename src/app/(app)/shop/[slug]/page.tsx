@@ -101,13 +101,6 @@ async function page({ searchParams, params }: Props) {
     overrideAccess: false,
     page: currentPage,
     limit: ITEMS_PER_PAGE,
-    select: {
-      title: true,
-      slug: true,
-      gallery: true,
-      categories: true,
-      priceInNGN: true,
-    },
     sort: (sort as string) || '-createdAt',
     where: {
       and: whereConditions,

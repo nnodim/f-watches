@@ -56,7 +56,5 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
     }))
   }
 
-  console.log(modifiedDoc)
-
   return modifiedDoc
 }

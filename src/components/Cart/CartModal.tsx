@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
+import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { ShoppingCart } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -20,11 +20,17 @@ import { DeleteItemButton } from './DeleteItemButton'
 import { EditItemQuantityButton } from './EditItemQuantityButton'
 import { OpenCartButton } from './OpenCart'
 import { Button } from '@/components/ui/button'
-import { Product } from '@/payload-types'
+import { Cart, Product } from '@/payload-types'
+import { getEffectivePrice } from '@/lib/pricing'
+import { cn } from '@/utilities/cn'
 
 export function CartModal() {
   const { cart } = useCart()
+  const { currency } = useCurrency()
   const [isOpen, setIsOpen] = useState(false)
+
+  const discountAmount =
+    currency.code === 'NGN' ? cart?.discountAmountInNGN : cart?.discountAmountInUSD
 
   const pathname = usePathname()
 
@@ -60,7 +66,7 @@ export function CartModal() {
           <div className="grow flex px-4">
             <div className="flex flex-col justify-between w-full">
               <ul className="grow overflow-auto py-4">
-                {cart?.items?.map((item, i) => {
+                {(cart as Cart)?.items?.map((item, i) => {
                   const product = item.product
                   const variant = item.variant
 
@@ -78,12 +84,13 @@ export function CartModal() {
                       : undefined
 
                   let image = firstGalleryImage || metaImage
-                  let price = product.priceInNGN
+                  let price: number | null = null
+                  let compareAt: number | null = null
 
                   const isVariant = Boolean(variant) && typeof variant === 'object'
 
                   if (isVariant) {
-                    price = variant?.priceInNGN
+                    price = getEffectivePrice(variant as any, currency.code).price
 
                     const imageVariant = product.gallery?.find((item) => {
                       if (!item.variantOption) return false
@@ -103,6 +110,11 @@ export function CartModal() {
                     if (imageVariant && typeof imageVariant.image === 'object') {
                       image = imageVariant.image
                     }
+                  }
+
+                  if (!isVariant) {
+                    price = getEffectivePrice(product as any, currency.code).price
+                    compareAt = getEffectivePrice(product as any, currency.code).compareAt
                   }
 
                   return (
@@ -141,12 +153,22 @@ export function CartModal() {
                             ) : null}
                           </div>
                         </Link>
-                        <div className="flex h-16 flex-col justify-between">
+                        <div className="flex h-16 flex-col gap-1 justify-between">
                           {typeof price === 'number' && (
-                            <Price
-                              amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm"
-                            />
+                            <div className='flex flex-col items-end gap-1'>
+                              <Price
+                                amount={price}
+                                className={cn('flex justify-end space-y-2 text-right text-sm', {
+                                  'text-red-400':
+                                    typeof compareAt === 'number' && compareAt > price,
+                                })}
+                              />
+                              {typeof compareAt === 'number' && compareAt > price && (
+                                <span className="text-xs line-through">
+                                  <Price amount={compareAt} as="span" />
+                                </span>
+                              )}
+                            </div>
                           )}
                           <div className="ml-auto flex h-9 flex-row items-center rounded-lg border">
                             <EditItemQuantityButton item={item} type="minus" />
@@ -165,12 +187,23 @@ export function CartModal() {
               <div className="px-4">
                 <div className="py-4 text-sm text-neutral-500 dark:text-neutral-400">
                   {typeof cart?.subtotal === 'number' && (
-                    <div className="mb-3 flex items-center justify-between border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
-                      <p>Total</p>
-                      <Price
-                        amount={cart?.subtotal}
-                        className="text-right text-base text-black dark:text-white"
-                      />
+                    <div className="mb-3 flex flex-col gap-2 border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
+                      {typeof discountAmount === 'number' && discountAmount > 0 && (
+                        <div className="flex items-center justify-between">
+                          <p>Discount</p>
+                          <Price
+                            amount={discountAmount}
+                            className="text-right text-base text-black dark:text-white"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <p>Total</p>
+                        <Price
+                          amount={cart?.total ?? cart?.subtotal}
+                          className="text-right text-base text-black dark:text-white"
+                        />
+                      </div>
                     </div>
                   )}
 

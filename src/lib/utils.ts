@@ -28,6 +28,18 @@ export const  handlePaystackSuccess = async ({
   const cartItemsSnapshot = paystackData.metadata.cartItemsSnapshot
     ? JSON.parse(paystackData.metadata.cartItemsSnapshot)
     : []
+  const cartDiscountAmount = paystackData.metadata.cartDiscountAmount
+    ? Number(paystackData.metadata.cartDiscountAmount)
+    : 0
+  const cartTotal = paystackData.metadata.cartTotal
+    ? Number(paystackData.metadata.cartTotal)
+    : paystackData.amount
+  const cartShippingFee = paystackData.metadata.cartShippingFee
+    ? Number(paystackData.metadata.cartShippingFee)
+    : 0
+  const cartGrandTotal = paystackData.metadata.cartGrandTotal
+    ? Number(paystackData.metadata.cartGrandTotal)
+    : cartTotal + cartShippingFee
   const shippingAddress = paystackData.metadata.shippingAddress
     ? JSON.parse(paystackData.metadata.shippingAddress)
     : undefined
@@ -37,7 +49,8 @@ export const  handlePaystackSuccess = async ({
   const order = await payload.create({
     collection: 'orders',
     data: {
-      amount: paystackData.amount,
+      amount: cartGrandTotal || paystackData.amount,
+      shippingFee: cartShippingFee,
       currency: paystackData.currency,
       // If we have a user in the transaction, link them, otherwise use email
       customer: req.user ? req.user.id : undefined,
@@ -51,11 +64,36 @@ export const  handlePaystackSuccess = async ({
 
   // 3. Update Cart (Mark as purchased)
   if (cartID) {
-    await payload.update({
+    const updatedCart = await payload.update({
       id: cartID,
       collection: 'carts',
       data: { purchasedAt: new Date().toISOString() },
     })
+
+    const discountCode = updatedCart?.discountCode
+    const discountCodeId = typeof discountCode === 'object' ? discountCode?.id : discountCode
+
+    if (discountCodeId && cartDiscountAmount > 0) {
+      const discountDoc = await payload.findByID({
+        collection: 'discount-codes',
+        id: discountCodeId,
+        depth: 0,
+        select: {
+          uses: true,
+        },
+      })
+
+      const nextUses =
+        discountDoc && typeof (discountDoc as any).uses === 'number' ? (discountDoc as any).uses + 1 : 1
+
+      await payload.update({
+        collection: 'discount-codes',
+        id: discountCodeId,
+        data: {
+          uses: nextUses,
+        },
+      })
+    }
   }
 
   // 4. Update Inventory (Atomic Operation)

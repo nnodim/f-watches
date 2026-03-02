@@ -22,16 +22,34 @@ export const Providers: React.FC<{
             api={{
               cartsFetchQuery: {
                 depth: 2,
+                select: {
+                  items: true,
+                  subtotal: true,
+                  total: true,
+                  discountCode: true,
+                  discountAmountInNGN: true,
+                  discountAmountInUSD: true,
+                },
                 populate: {
                   products: {
                     slug: true,
                     title: true,
                     gallery: true,
                     inventory: true,
+                    saleEnabled: true,
+                    saleStart: true,
+                    saleEnd: true,
+                    salePriceInNGN: true,
+                    salePriceInUSD: true,
                   },
                   variants: {
                     title: true,
                     inventory: true,
+                    saleEnabled: true,
+                    saleStart: true,
+                    saleEnd: true,
+                    salePriceInNGN: true,
+                    salePriceInUSD: true,
                   },
                 },
               },

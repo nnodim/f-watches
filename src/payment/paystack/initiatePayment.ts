@@ -1,6 +1,9 @@
 import { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import type { InitiatePaymentReturnType, PaystackAdapterArgs } from './index.js'
-import { Product } from '@/payload-types.js'
+import { buildCartSnapshot } from '@/lib/cartSnapshot'
+import type { DiscountCodeDoc } from '@/lib/discounts'
+import type { Cart } from '@/payload-types'
+import { getNigeriaShippingFee } from '@/lib/shipping'
 
 type Props = {
   secretKey: PaystackAdapterArgs['secretKey']
@@ -8,20 +11,6 @@ type Props = {
 
 function isSupportedCurrency(currency: string): currency is 'NGN' | 'USD' {
   return currency.toUpperCase() === 'NGN' || currency.toUpperCase() === 'USD'
-}
-
-function getPriceForCurrency(
-  product: Product,
-  currency: string,
-  priceType: 'price' | 'costPrice',
-): number | undefined {
-  const key = `${priceType}In${currency.toUpperCase()}` as const
-
-  if (key in product) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (product as Record<string, any>)[key]
-  }
-  return undefined
 }
 
 export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['initiatePayment'] =
@@ -36,36 +25,65 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
       billingAddress: billingAddressFromData,
       shippingAddress: shippingAddressFromData,
     } = data
-    const amount = cart.subtotal
+    const cartData = cart as Cart
+    const shippingFeeResult = getNigeriaShippingFee({
+      city: shippingAddressFromData?.city,
+      country: shippingAddressFromData?.country,
+      currency,
+      state: shippingAddressFromData?.state,
+    })
+
+    if (shippingFeeResult.amount === null) {
+      throw new Error(shippingFeeResult.error)
+    }
+
+    const shippingFee = shippingFeeResult.amount
 
     // 1. Validations
     if (!secretKey) throw new Error('Paystack secret key is required.')
     if (!currency) throw new Error('Currency is required.')
     if (!cart?.items?.length) throw new Error('Cart is empty.')
     if (!customerEmail) throw new Error('Customer email is required.')
-    if (!amount || amount <= 0) throw new Error('Valid amount is required.')
 
     try {
       // 2. Prepare Data synchronously
-      const flattenedCart = cart.items.map((item) => {
-        // Helper to determine if product is populated or just an ID
-        const product = item.product
-        const isProductObject = typeof product === 'object' && product !== null
+      const discountCodeValue = cartData.discountCode
+      let discountCodeDoc: DiscountCodeDoc | null = null
 
-        return {
-          product: isProductObject ? product.id : product,
-          quantity: item.quantity,
-          variant: item.variant
-            ? typeof item.variant === 'object'
-              ? item.variant.id
-              : item.variant
-            : undefined,
-          unitPrice: isProductObject ? getPriceForCurrency(product, currency, 'price') : undefined,
-          unitCostPrice: isProductObject
-            ? getPriceForCurrency(product, currency, 'costPrice')
-            : undefined,
-        }
+      if (discountCodeValue) {
+        const discountCodeId =
+          typeof discountCodeValue === 'object' ? discountCodeValue.id : discountCodeValue
+        discountCodeDoc = (await payload.findByID({
+          collection: 'discount-codes',
+          id: discountCodeId,
+          depth: 0,
+          select: {
+            id: true,
+            active: true,
+            type: true,
+            appliesTo: true,
+            percentage: true,
+            products: true,
+            startsAt: true,
+            endsAt: true,
+            maxUses: true,
+            uses: true,
+            amountInNGN: true,
+            amountInUSD: true,
+            minSubtotalInNGN: true,
+            minSubtotalInUSD: true,
+          },
+        })) as unknown as DiscountCodeDoc
+      }
+
+      const cartSnapshot = buildCartSnapshot({
+        cart: cartData,
+        currency,
+        discountCode: discountCodeDoc,
       })
+      const grandTotal = cartSnapshot.total + shippingFee
+
+      if (!grandTotal || grandTotal <= 0) throw new Error('Valid amount is required.')
 
       const reference = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
@@ -73,14 +91,18 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
 
       const paystackBody = {
         email: customerEmail,
-        amount: Math.round(amount), // Ensure integer (kobo/cents)
+        amount: Math.round(grandTotal),
         currency: currency.toUpperCase(),
         reference,
         callback_url: `${req.protocol}://${req.host}/api/payments/paystack/callback`,
         metadata: {
           cartID: cart.id,
           // This snapshot now includes the costPrice for each item
-          cartItemsSnapshot: JSON.stringify(flattenedCart),
+          cartItemsSnapshot: JSON.stringify(cartSnapshot.items),
+          cartDiscountAmount: cartSnapshot.discountAmount,
+          cartShippingFee: shippingFee,
+          cartTotal: cartSnapshot.total,
+          cartGrandTotal: grandTotal,
           shippingAddress: JSON.stringify(shippingAddressFromData),
           custom_fields: [
             {
@@ -106,14 +128,14 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
           collection: 'transactions',
           data: {
             ...(req.user ? { customer: req.user.id } : { customerEmail }),
-            amount,
+            amount: grandTotal,
             customerEmail,
             billingAddress: billingAddressFromData,
             cart: cart.id,
             currency: isSupportedCurrency(currency)
               ? (currency.toUpperCase() as 'NGN' | 'USD')
               : null,
-            items: flattenedCart, // Note: Transaction schema must allow 'costPrice' in items, or this field will be stripped here (but still present in Paystack metadata)
+            items: cartSnapshot.items,
             paymentMethod: 'paystack',
             status: 'pending',
             paystack: {
