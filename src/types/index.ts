@@ -5,6 +5,10 @@ export interface AnalyticsOverview {
   totalExpenses: number
   netProfit: number
   profitMargin: number
+  totalOutstandingDebt: number
+  debtCollected: number
+  activeDebtOrders: number
+  overdueDebtOrders: number
   totalOrders: number
   totalProducts: number
   totalCustomers: number
@@ -16,6 +20,7 @@ export interface AnalyticsOverview {
   productsChange: number
   customersChange: number
   itemsSoldChange: number
+  debtCollectedChange: number
 }
 
 export interface ExpenseByCategory {
@@ -32,6 +37,7 @@ export interface RevenueDataPoint {
   cost: number
   profit: number
   expense: number
+  debtCollected: number
 }
 
 export type OrderStatusData = {
@@ -59,6 +65,15 @@ export interface RecentOrder {
   date: string
 }
 
+export interface RecentDebtOrder {
+  id: string
+  customer: string
+  debtStatus: string
+  amountPaid: number
+  amountOutstanding: number
+  dueDate?: null | string
+}
+
 export interface CustomerProfitability {
   id: string
   name: string
@@ -75,9 +90,11 @@ export interface AnalyticsData {
   overview: AnalyticsOverview
   revenueData: RevenueDataPoint[]
   orderStatusData: OrderStatusData[]
+  debtStatusData: OrderStatusData[]
   expensesByCategory: ExpenseByCategory[]
   topProducts: TopProduct[]
   recentOrders: RecentOrder[]
+  recentDebtOrders: RecentDebtOrder[]
   topCustomers: CustomerProfitability[]
 }
 

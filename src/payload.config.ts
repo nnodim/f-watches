@@ -29,6 +29,7 @@ import { Posts } from './collections/Post'
 import { PostCategories } from './collections/PostCategories'
 import { Expenses } from './collections/Expenses'
 import { DiscountCodes } from './collections/DiscountCodes'
+import { DebtPayments } from './collections/DebtPayments'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -60,7 +61,17 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Expenses, DiscountCodes, Pages, Posts, PostCategories, Categories, Media],
+  collections: [
+    Users,
+    Expenses,
+    DiscountCodes,
+    DebtPayments,
+    Pages,
+    Posts,
+    PostCategories,
+    Categories,
+    Media,
+  ],
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',
   }),

@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { checkRole } from '@/access/utilities'
 import type { Order, Product } from '@/payload-types'
 import type {
   AnalyticsData,
   AnalyticsQuery,
   CustomerProfitability,
+  RecentDebtOrder,
   RecentOrder,
   RevenueDataPoint,
   TopProduct,
 } from '@/types/index'
 import type { Endpoint, PayloadRequest } from 'payload'
 
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+
 const moneyFromKobo = (amount?: number | null) => (amount ?? 0) / 100
 
 type UnitAmounts = { unitPrice: number; unitCost: number }
 
-/**
- * Prefer unitPrice/unitCostPrice stored on the order item (snapshot at purchase time).
- * If missing (legacy orders), fallback to product pricing.
- */
 const getItemUnitAmounts = (
   item: any,
   product: Product | undefined,
@@ -44,7 +44,6 @@ const getItemUnitAmounts = (
   return { unitPrice: 0, unitCost: 0 }
 }
 
-// Helper for Pie Charts
 const formatPieData = (data: Record<string, number>, colors: string[]) =>
   Object.entries(data)
     .map(([name, value], i) => ({
@@ -59,7 +58,7 @@ export const analyticsEndpoint: Endpoint = {
   path: '/analytics',
   handler: async (req: PayloadRequest) => {
     try {
-      if (!req.user) {
+      if (!req.user || !checkRole(['admin'], req.user)) {
         return Response.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
@@ -75,25 +74,26 @@ export const analyticsEndpoint: Endpoint = {
       let totalItemsSold = 0
       let previousItemsSold = 0
 
-      // 1) Run independent queries in parallel
       const [
         currentOrdersRes,
         previousOrdersRes,
         currentExpensesRes,
         previousExpensesRes,
+        currentDebtPaymentsRes,
+        previousDebtPaymentsRes,
+        activeDebtOrdersRes,
         totalProductsCount,
         totalUsersCount,
         newCustomersCount,
         prevNewCustomersCount,
       ] = await Promise.all([
-        // Current Orders
         req.payload.find({
           collection: 'orders',
           where: { createdAt: { greater_than_equal: startDateStr } },
           limit: 2000,
           depth: 0,
           select: {
-            items: true, // includes unitPrice/unitCostPrice inside items
+            items: true,
             amount: true,
             currency: true,
             status: true,
@@ -103,7 +103,6 @@ export const analyticsEndpoint: Endpoint = {
           },
           sort: '-createdAt',
         }),
-        // Previous Orders
         req.payload.find({
           collection: 'orders',
           where: {
@@ -112,13 +111,12 @@ export const analyticsEndpoint: Endpoint = {
           limit: 2000,
           depth: 0,
           select: {
-            items: true, // includes unitPrice/unitCostPrice inside items
+            items: true,
             amount: true,
             currency: true,
           },
           sort: '-createdAt',
         }),
-        // Current Expenses
         req.payload.find({
           collection: 'expenses',
           where: { date: { greater_than_equal: startDateStr } },
@@ -126,13 +124,53 @@ export const analyticsEndpoint: Endpoint = {
           depth: 0,
           sort: '-date',
         }),
-        // Previous Expenses
         req.payload.find({
           collection: 'expenses',
           where: { date: { greater_than_equal: previousStartDateStr, less_than: startDateStr } },
           limit: 2000,
           depth: 0,
           sort: '-date',
+        }),
+        req.payload.find({
+          collection: 'debt-payments',
+          where: { paidAt: { greater_than_equal: startDateStr } },
+          limit: 2000,
+          depth: 0,
+          sort: '-paidAt',
+          select: {
+            amount: true,
+            paidAt: true,
+          },
+        }),
+        req.payload.find({
+          collection: 'debt-payments',
+          where: {
+            paidAt: { greater_than_equal: previousStartDateStr, less_than: startDateStr },
+          },
+          limit: 2000,
+          depth: 0,
+          sort: '-paidAt',
+          select: {
+            amount: true,
+          },
+        }),
+        req.payload.find({
+          collection: 'orders',
+          where: {
+            debtTrackingEnabled: { equals: true },
+          },
+          limit: 2000,
+          depth: 0,
+          select: {
+            customer: true,
+            customerEmail: true,
+            amountPaid: true,
+            amountOutstanding: true,
+            debtDueDate: true,
+            debtStatus: true,
+            updatedAt: true,
+          },
+          sort: '-updatedAt',
         }),
         req.payload.count({ collection: 'products' }),
         req.payload.count({ collection: 'users' }),
@@ -152,8 +190,15 @@ export const analyticsEndpoint: Endpoint = {
       const previousOrders = previousOrdersRes.docs as unknown as Order[]
       const currentExpenses = currentExpensesRes.docs as any[]
       const previousExpenses = previousExpensesRes.docs as any[]
+      const currentDebtPayments = currentDebtPaymentsRes.docs as Array<{
+        amount?: number | null
+        paidAt?: string | null
+      }>
+      const previousDebtPayments = previousDebtPaymentsRes.docs as Array<{
+        amount?: number | null
+      }>
+      const activeDebtOrders = activeDebtOrdersRes.docs as unknown as Order[]
 
-      // 2) Extract Product IDs (only for product names in tables)
       const productIds = new Set<string>()
       currentOrders.forEach((order) => {
         order.items?.forEach((item: any) => {
@@ -168,7 +213,6 @@ export const analyticsEndpoint: Endpoint = {
         })
       })
 
-      // 3) Batch fetch products (ONLY title needed now)
       const productsMap = new Map<string, Product>()
       if (productIds.size > 0) {
         const productsRes = await req.payload.find({
@@ -179,7 +223,6 @@ export const analyticsEndpoint: Endpoint = {
           depth: 0,
           select: {
             title: true,
-            // Optional fallback fields for legacy orders (remove later if not needed)
             priceInNGN: true,
             priceInUSD: true,
             costPriceInNGN: true,
@@ -189,19 +232,22 @@ export const analyticsEndpoint: Endpoint = {
         productsRes.docs.forEach((p) => productsMap.set(p.id, p as Product))
       }
 
-      // 4) Initialize Aggregation Containers
       let totalRevenue = 0
-      let totalCost = 0 // COGS
+      let totalCost = 0
       let totalGrossProfit = 0
-      let totalExpenses = 0 // Operational Expenses
+      let totalExpenses = 0
+      let totalOutstandingDebt = 0
+      let activeDebtOrdersCount = 0
+      let overdueDebtOrdersCount = 0
+      let debtCollected = 0
 
-      // Using dateKey to merge orders and expenses
       const metricsByDate = new Map<
         string,
-        { revenue: number; cost: number; profit: number; expense: number }
+        { revenue: number; cost: number; profit: number; expense: number; debtCollected: number }
       >()
 
       const statusCounts: Record<string, number> = {}
+      const debtStatusCounts: Record<string, number> = {}
       const expenseCategoryTotals: Record<string, number> = {}
 
       const productMetrics = new Map<
@@ -222,11 +268,9 @@ export const analyticsEndpoint: Endpoint = {
         }
       >()
 
-      // 5) Aggregation Loop: ORDERS (Current)
       for (const order of currentOrders) {
         const orderCurrency = order.currency || 'NGN'
         let orderCost = 0
-        let itemsRevenue = 0
 
         if (order.items && Array.isArray(order.items)) {
           order.items.forEach((item: any) => {
@@ -240,11 +284,9 @@ export const analyticsEndpoint: Endpoint = {
             const itemRevenue = unitPrice * qty
             const itemCost = unitCost * qty
 
-            itemsRevenue += itemRevenue
+            const key = productId || 'unknown'
             orderCost += itemCost
 
-            // Product Metrics
-            const key = productId || 'unknown'
             if (!productMetrics.has(key)) {
               productMetrics.set(key, {
                 id: product?.id || 'unknown',
@@ -255,6 +297,7 @@ export const analyticsEndpoint: Endpoint = {
                 profit: 0,
               })
             }
+
             const pMetric = productMetrics.get(key)!
             pMetric.sales += qty
             pMetric.revenue += itemRevenue
@@ -263,32 +306,31 @@ export const analyticsEndpoint: Endpoint = {
           })
         }
 
-        // Canonical revenue: what was charged/paid
         const orderRevenue = moneyFromKobo(order.amount || 0)
-        // If you prefer product-sales-only revenue: use itemsRevenue instead:
-        // const orderRevenue = itemsRevenue
-
         const orderProfit = orderRevenue - orderCost
 
         totalRevenue += orderRevenue
         totalCost += orderCost
         totalGrossProfit += orderProfit
 
-        // Date Metrics
         const dateKey = new Date(order.createdAt).toLocaleDateString()
         if (!metricsByDate.has(dateKey)) {
-          metricsByDate.set(dateKey, { revenue: 0, cost: 0, profit: 0, expense: 0 })
+          metricsByDate.set(dateKey, {
+            revenue: 0,
+            cost: 0,
+            profit: 0,
+            expense: 0,
+            debtCollected: 0,
+          })
         }
         const dMetric = metricsByDate.get(dateKey)!
         dMetric.revenue += orderRevenue
         dMetric.cost += orderCost
         dMetric.profit += orderProfit
 
-        // Status Counts
         const status = (order.status as string) || 'processing'
         statusCounts[status] = (statusCounts[status] || 0) + 1
 
-        // Customer Metrics
         const customerEmail = order.customerEmail || 'Guest'
         const customerId = typeof order.customer === 'string' ? order.customer : order.customer?.id
         const customerKey = customerId || customerEmail
@@ -304,6 +346,7 @@ export const analyticsEndpoint: Endpoint = {
             profit: 0,
           })
         }
+
         const cMetric = customerMetrics.get(customerKey)!
         cMetric.orders += 1
         cMetric.revenue += orderRevenue
@@ -311,9 +354,8 @@ export const analyticsEndpoint: Endpoint = {
         cMetric.profit += orderProfit
       }
 
-      // 6) Aggregation Loop: EXPENSES (Current)
       for (const expense of currentExpenses) {
-        const amount = expense.amount || 0 // assumed stored in main currency (not kobo)
+        const amount = expense.amount || 0
         totalExpenses += amount
 
         const category = (expense.category as string) || 'other'
@@ -321,16 +363,51 @@ export const analyticsEndpoint: Endpoint = {
 
         const dateKey = new Date(expense.date).toLocaleDateString()
         if (!metricsByDate.has(dateKey)) {
-          metricsByDate.set(dateKey, { revenue: 0, cost: 0, profit: 0, expense: 0 })
+          metricsByDate.set(dateKey, {
+            revenue: 0,
+            cost: 0,
+            profit: 0,
+            expense: 0,
+            debtCollected: 0,
+          })
         }
         const dMetric = metricsByDate.get(dateKey)!
         dMetric.expense += amount
       }
 
-      // 7) Previous Period Aggregation
+      for (const payment of currentDebtPayments) {
+        const amount = moneyFromKobo(payment.amount || 0)
+        debtCollected += amount
+
+        const dateKey = new Date(payment.paidAt || new Date().toISOString()).toLocaleDateString()
+        if (!metricsByDate.has(dateKey)) {
+          metricsByDate.set(dateKey, {
+            revenue: 0,
+            cost: 0,
+            profit: 0,
+            expense: 0,
+            debtCollected: 0,
+          })
+        }
+        const dMetric = metricsByDate.get(dateKey)!
+        dMetric.debtCollected += amount
+      }
+
+      for (const order of activeDebtOrders) {
+        const outstanding = moneyFromKobo(order.amountOutstanding || 0)
+        const status = (order.debtStatus as string) || 'unpaid'
+
+        totalOutstandingDebt += outstanding
+        if (outstanding > 0) activeDebtOrdersCount += 1
+        if (status === 'overdue') overdueDebtOrdersCount += 1
+
+        debtStatusCounts[status] = (debtStatusCounts[status] || 0) + 1
+      }
+
       let previousRevenue = 0
       let previousGrossProfit = 0
       let previousExpensesTotal = 0
+      let previousDebtCollected = 0
 
       for (const order of previousOrders) {
         const orderCurrency = order.currency || 'NGN'
@@ -348,27 +425,32 @@ export const analyticsEndpoint: Endpoint = {
           })
         }
 
-        const rev = moneyFromKobo(order.amount || 0)
-        previousRevenue += rev
-        previousGrossProfit += rev - orderCost
+        const revenue = moneyFromKobo(order.amount || 0)
+        previousRevenue += revenue
+        previousGrossProfit += revenue - orderCost
       }
 
       for (const expense of previousExpenses) {
         previousExpensesTotal += expense.amount || 0
       }
 
-      // 8) Format Revenue Data (merge orders + expenses by date)
+      for (const payment of previousDebtPayments) {
+        previousDebtCollected += moneyFromKobo(payment.amount || 0)
+      }
+
       const revenueData: RevenueDataPoint[] = Array.from(metricsByDate.entries())
-        .map(([date, m]) => ({
+        .map(([date, metrics]) => ({
           date,
-          revenue: Math.round(m.revenue),
-          cost: Math.round(m.cost),
-          profit: Math.round(m.profit), // Gross Profit
-          expense: Math.round(m.expense),
+          revenue: Math.round(metrics.revenue),
+          cost: Math.round(metrics.cost),
+          profit: Math.round(metrics.profit),
+          expense: Math.round(metrics.expense),
+          debtCollected: Math.round(metrics.debtCollected),
         }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-      const orderStatusData = formatPieData(statusCounts, [])
+      const orderStatusData = formatPieData(statusCounts, COLORS)
+      const debtStatusData = formatPieData(debtStatusCounts, COLORS)
 
       const expensesByCategory = formatPieData(expenseCategoryTotals, [
         '#ef4444',
@@ -397,7 +479,6 @@ export const analyticsEndpoint: Endpoint = {
         .sort((a, b) => b.profit - a.profit)
         .slice(0, 10)
 
-      // Recent Orders (include cost + profit)
       const recentOrders: RecentOrder[] = currentOrders.slice(0, 10).map((order) => {
         const orderCurrency = order.currency || 'NGN'
         const amount = moneyFromKobo(order.amount || 0)
@@ -425,7 +506,18 @@ export const analyticsEndpoint: Endpoint = {
         }
       })
 
-      // Changes
+      const recentDebtOrders: RecentDebtOrder[] = activeDebtOrders
+        .filter((order) => (order.amountOutstanding || 0) > 0)
+        .slice(0, 10)
+        .map((order) => ({
+          id: order.id,
+          customer: order.customerEmail || 'Guest',
+          debtStatus: (order.debtStatus as string) || 'unpaid',
+          amountPaid: Math.round(moneyFromKobo(order.amountPaid || 0)),
+          amountOutstanding: Math.round(moneyFromKobo(order.amountOutstanding || 0)),
+          dueDate: order.debtDueDate,
+        }))
+
       const revenueChange =
         previousRevenue > 0
           ? Math.round(((totalRevenue - previousRevenue) / previousRevenue) * 100)
@@ -462,33 +554,45 @@ export const analyticsEndpoint: Endpoint = {
           ? Math.round(((totalItemsSold - previousItemsSold) / previousItemsSold) * 100)
           : 0
 
+      const debtCollectedChange =
+        previousDebtCollected > 0
+          ? Math.round(((debtCollected - previousDebtCollected) / previousDebtCollected) * 100)
+          : 0
+
       const netProfit = totalGrossProfit - totalExpenses
 
       const analyticsData: AnalyticsData = {
         overview: {
           totalRevenue: Math.round(totalRevenue),
-          totalProfit: Math.round(totalGrossProfit), // gross profit
+          totalProfit: Math.round(totalGrossProfit),
           netProfit: Math.round(netProfit),
           totalCost: Math.round(totalCost),
           totalExpenses: Math.round(totalExpenses),
-          profitMargin: totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0, // net margin
+          profitMargin: totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0,
+          totalOutstandingDebt: Math.round(totalOutstandingDebt),
+          debtCollected: Math.round(debtCollected),
+          activeDebtOrders: activeDebtOrdersCount,
+          overdueDebtOrders: overdueDebtOrdersCount,
           totalOrders: currentOrders.length,
           totalProducts: totalProductsCount.totalDocs,
           totalCustomers: totalUsersCount.totalDocs,
+          totalItemsSold,
           revenueChange,
           profitChange,
           expensesChange,
           ordersChange,
           productsChange: 0,
           customersChange,
-          totalItemsSold,
           itemsSoldChange,
+          debtCollectedChange,
         },
         revenueData,
         orderStatusData,
+        debtStatusData,
         expensesByCategory,
         topProducts,
         recentOrders,
+        recentDebtOrders,
         topCustomers,
       }
 
@@ -499,3 +603,4 @@ export const analyticsEndpoint: Endpoint = {
     }
   },
 }
+
