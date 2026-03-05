@@ -75,6 +75,7 @@ export interface Config {
     users: User;
     expenses: Expense;
     'discount-codes': DiscountCode;
+    'debt-payments': DebtPayment;
     pages: Page;
     posts: Post;
     postCategories: PostCategory;
@@ -110,11 +111,15 @@ export interface Config {
     products: {
       variants: 'variants';
     };
+    orders: {
+      debtPayments: 'debt-payments';
+    };
   };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
     'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
+    'debt-payments': DebtPaymentsSelect<false> | DebtPaymentsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     postCategories: PostCategoriesSelect<false> | PostCategoriesSelect<true>;
@@ -278,7 +283,25 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: ('NGN' | 'USD') | null;
+  /**
+   * Enable this order for debt tracking and repayment management.
+   */
+  debtTrackingEnabled?: boolean | null;
+  debtStatus?: ('not-tracked' | 'unpaid' | 'partial' | 'paid' | 'overdue' | 'overpaid') | null;
   shippingFee?: number | null;
+  amountPaid?: number | null;
+  amountOutstanding?: number | null;
+  debtDueDate?: string | null;
+  debtLastPaymentAt?: string | null;
+  /**
+   * Internal notes for collection and follow-up.
+   */
+  debtNotes?: string | null;
+  debtPayments?: {
+    docs?: (string | DebtPayment)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1087,6 +1110,25 @@ export interface DiscountCode {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "debt-payments".
+ */
+export interface DebtPayment {
+  id: string;
+  reference: string;
+  order: string | Order;
+  customer?: (string | null) | User;
+  customerEmail?: string | null;
+  amount: number;
+  currency?: ('NGN' | 'USD') | null;
+  paidAt: string;
+  paymentMethod: 'bank-transfer' | 'cash' | 'card' | 'pos' | 'mobile-transfer' | 'adjustment' | 'other';
+  recordedBy?: (string | null) | User;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "addresses".
  */
 export interface Address {
@@ -1396,6 +1438,10 @@ export interface PayloadLockedDocument {
         value: string | DiscountCode;
       } | null)
     | ({
+        relationTo: 'debt-payments';
+        value: string | DebtPayment;
+      } | null)
+    | ({
         relationTo: 'pages';
         value: string | Page;
       } | null)
@@ -1567,6 +1613,24 @@ export interface DiscountCodesSelect<T extends boolean = true> {
   minSubtotalInUSD?: T;
   maxUses?: T;
   uses?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "debt-payments_select".
+ */
+export interface DebtPaymentsSelect<T extends boolean = true> {
+  reference?: T;
+  order?: T;
+  customer?: T;
+  customerEmail?: T;
+  amount?: T;
+  currency?: T;
+  paidAt?: T;
+  paymentMethod?: T;
+  recordedBy?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2214,7 +2278,15 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  debtTrackingEnabled?: T;
+  debtStatus?: T;
   shippingFee?: T;
+  amountPaid?: T;
+  amountOutstanding?: T;
+  debtDueDate?: T;
+  debtLastPaymentAt?: T;
+  debtNotes?: T;
+  debtPayments?: T;
   updatedAt?: T;
   createdAt?: T;
 }

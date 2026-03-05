@@ -4,12 +4,14 @@ import type {
   CustomerProfitability,
   ExpenseByCategory,
   OrderStatusData,
+  RecentDebtOrder,
   RecentOrder,
   StatCardProps,
   TimeRange,
   TopProduct,
 } from '@/types/index'
 import {
+  AlertTriangle,
   CreditCard,
   DollarSign,
   Percent,
@@ -191,6 +193,10 @@ export const AnalyticsClient: React.FC = () => {
       totalExpenses: 0,
       netProfit: 0,
       profitMargin: 0,
+      totalOutstandingDebt: 0,
+      debtCollected: 0,
+      activeDebtOrders: 0,
+      overdueDebtOrders: 0,
       totalOrders: 0,
       totalProducts: 0,
       totalCustomers: 0,
@@ -202,12 +208,15 @@ export const AnalyticsClient: React.FC = () => {
       customersChange: 0,
       totalItemsSold: 0,
       itemsSoldChange: 0,
+      debtCollectedChange: 0,
     },
     revenueData: [],
     orderStatusData: [],
+    debtStatusData: [],
     expensesByCategory: [],
     topProducts: [],
     recentOrders: [],
+    recentDebtOrders: [],
     topCustomers: [],
   })
   const fetchAnalytics = useCallback(async (): Promise<void> => {
@@ -230,12 +239,19 @@ export const AnalyticsClient: React.FC = () => {
   const getStatusStyle = (status: string) => {
     const baseStyle = styles.statusBadge
     switch (status) {
+      case 'paid':
       case 'completed':
         return { ...baseStyle, backgroundColor: '#d1fae5', color: '#065f46' }
+      case 'partial':
       case 'processing':
         return { ...baseStyle, backgroundColor: '#dbeafe', color: '#1e40af' }
+      case 'unpaid':
+        return { ...baseStyle, backgroundColor: '#fef3c7', color: '#92400e' }
+      case 'overdue':
       case 'cancelled':
         return { ...baseStyle, backgroundColor: '#fee2e2', color: '#991b1b' }
+      case 'not-tracked':
+        return { ...baseStyle, backgroundColor: '#f3f4f6', color: '#4b5563' }
       default:
         return { ...baseStyle, backgroundColor: '#f3f4f6', color: '#374151' }
     }
@@ -324,6 +340,38 @@ export const AnalyticsClient: React.FC = () => {
             color="#0ea5e9"
           />
         </Link>
+        <Link href="/admin/collections/debt-payments">
+          <StatCard
+            title="Debt Collected"
+            value={formatCurrency(analytics.overview.debtCollected)}
+            change={analytics.overview.debtCollectedChange}
+            icon={Wallet}
+            color="#14b8a6"
+          />
+        </Link>
+        <Link href="/admin/collections/orders">
+          <StatCard
+            title="Outstanding Debt"
+            value={formatCurrency(analytics.overview.totalOutstandingDebt)}
+            change={0}
+            icon={CreditCard}
+            color="#f97316"
+          />
+        </Link>
+        <StatCard
+          title="Active Debt Orders"
+          value={analytics.overview.activeDebtOrders.toLocaleString()}
+          change={0}
+          icon={ShoppingCart}
+          color="#64748b"
+        />
+        {/* <StatCard
+          title="Overdue Debt"
+          value={analytics.overview.overdueDebtOrders.toLocaleString()}
+          change={0}
+          icon={AlertTriangle}
+          color="#dc2626"
+        /> */}
         <StatCard
           title="Customers"
           value={analytics.overview.totalCustomers.toLocaleString()}
@@ -376,6 +424,14 @@ export const AnalyticsClient: React.FC = () => {
                 strokeWidth={2}
                 dot={false}
                 name="Expenses"
+              />
+              <Line
+                type="monotone"
+                dataKey="debtCollected"
+                stroke="#14b8a6"
+                strokeWidth={2}
+                dot={false}
+                name="Debt Collected"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -431,6 +487,33 @@ export const AnalyticsClient: React.FC = () => {
               >
                 {analytics.orderStatusData.map((entry: OrderStatusData, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div style={styles.chartCard}>
+          <h3 style={styles.chartTitle}>Debt Status</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={analytics.debtStatusData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(props: PieLabelRenderProps) => {
+                  const name = (props && (props.name ?? '')) as string
+                  const percent = (props && props.percent) ?? 0
+                  return percent > 0 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''
+                }}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {analytics.debtStatusData.map((entry: OrderStatusData, index: number) => (
+                  <Cell key={`debt-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -540,6 +623,40 @@ export const AnalyticsClient: React.FC = () => {
                   </td>
                   <td style={{ ...styles.td, color: '#6b7280' }}>
                     {new Date(order.date).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={styles.chartCard}>
+        <h3 style={styles.chartTitle}>Active Debt Orders</h3>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={styles.table}>
+            <thead style={styles.tableHeader}>
+              <tr>
+                <th style={styles.th}>Order ID</th>
+                <th style={styles.th}>Customer</th>
+                <th style={styles.th}>Debt Status</th>
+                <th style={styles.th}>Paid</th>
+                <th style={styles.th}>Outstanding</th>
+                <th style={styles.th}>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {analytics.recentDebtOrders.map((order: RecentDebtOrder) => (
+                <tr key={order.id}>
+                  <td style={{ ...styles.td, fontWeight: 500 }}>#{order.id}</td>
+                  <td style={styles.td}>{order.customer}</td>
+                  <td style={styles.td}>
+                    <span style={getStatusStyle(order.debtStatus)}>{order.debtStatus}</span>
+                  </td>
+                  <td style={styles.td}>{formatCurrency(order.amountPaid)}</td>
+                  <td style={styles.td}>{formatCurrency(order.amountOutstanding)}</td>
+                  <td style={{ ...styles.td, color: '#6b7280' }}>
+                    {order.dueDate ? new Date(order.dueDate).toLocaleDateString() : '-'}
                   </td>
                 </tr>
               ))}

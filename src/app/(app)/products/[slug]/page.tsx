@@ -113,7 +113,7 @@ export default async function ProductPage({ params }: Args) {
       />
       <div className="container pt-8 pb-8">
         <BackButton />
-        <div className="flex flex-col gap-12 rounded-lg border p-4 sm:p-8 md:py-12 lg:flex-row lg:gap-8 bg-primary-foreground">
+        <div className="flex flex-col gap-12 p-4 sm:p-8 md:py-12 lg:flex-row lg:gap-8">
           <div className="h-full w-full basis-full lg:basis-1/2 lg:sticky lg:top-4 lg:self-start">
             <Suspense
               fallback={

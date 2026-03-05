@@ -9,7 +9,7 @@ import { InitTheme } from '@/providers/Theme/InitTheme'
 import localFont from 'next/font/local'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
-import { Instrument_Sans, Montserrat, EB_Garamond } from 'next/font/google'
+import { Instrument_Sans, Montserrat, EB_Garamond, Roboto } from 'next/font/google'
 import './globals.css'
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
@@ -54,6 +54,11 @@ const montserrat = Montserrat({
   variable: '--font-montserrat',
 })
 
+const roboto = Roboto({
+  subsets: ['latin'],
+  variable: '--font-roboto',
+})
+
 const ebGaramond = EB_Garamond({
   subsets: ['latin'],
   variable: '--font-eb-garamond',
@@ -67,6 +72,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         GeistMono.variable,
         instrumentSans.variable,
         montserrat.variable,
+        roboto.variable,
         ebGaramond.variable,
         myFont.variable,
       ]
@@ -86,7 +92,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <LivePreviewListener />
 
           <Header />
-          <main>{children}</main>
+          <main className='font-instrument-sans'>{children}</main>
           <Footer />
         </Providers>
       </body>
