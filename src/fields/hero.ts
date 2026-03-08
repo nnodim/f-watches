@@ -35,12 +35,20 @@ export const hero: Field = {
           label: 'Low Impact',
           value: 'lowImpact',
         },
+        {
+          label: 'Hero Carousel',
+          value: 'heroCarousel',
+        },
       ],
       required: true,
     },
     {
       name: 'richText',
       type: 'richText',
+      admin: {
+        condition: (_, { type } = {}) =>
+          ['highImpact', 'mediumImpact', 'lowImpact'].includes(type),
+      },
       editor: lexicalEditor({
         features: ({ rootFeatures }) => {
           return [
@@ -55,6 +63,10 @@ export const hero: Field = {
     },
     linkGroup({
       overrides: {
+        admin: {
+          condition: (_, { type } = {}) =>
+            ['highImpact', 'mediumImpact', 'lowImpact'].includes(type),
+        },
         maxRows: 2,
       },
     }),
@@ -65,7 +77,53 @@ export const hero: Field = {
         condition: (_, { type } = {}) => ['highImpact', 'mediumImpact'].includes(type),
       },
       relationTo: 'media',
-      required: true,
+      validate: (
+        value: unknown,
+        { siblingData }: { siblingData?: { type?: string | null } },
+      ) => {
+        if (
+          ['highImpact', 'mediumImpact'].includes(siblingData?.type as string) &&
+          !value
+        ) {
+          return 'Media is required for high and medium impact heroes.'
+        }
+
+        return true
+      },
+    },
+    {
+      name: 'slides',
+      type: 'array',
+      admin: {
+        condition: (_, { type } = {}) => type === 'heroCarousel',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+        {
+          name: 'caption',
+          type: 'text',
+        },
+        {
+          name: 'text',
+          type: 'textarea',
+        },
+        linkGroup({
+          appearances: ['default', 'outline'],
+          overrides: {
+            maxRows: 2,
+          },
+        }),
+      ],
+      labels: {
+        plural: 'Slides',
+        singular: 'Slide',
+      },
+      minRows: 1,
     },
   ],
   label: false,
