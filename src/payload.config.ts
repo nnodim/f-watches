@@ -57,7 +57,7 @@ export default buildConfig({
           path: '/analytics',
         },
       },
-      afterNavLinks: [{ path: '@/components/AfterNavLinks/index.tsx' }],
+      beforeNavLinks: [{ path: '@/components/AfterNavLinks/index.tsx' }],
     },
     user: Users.slug,
   },

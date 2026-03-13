@@ -36,7 +36,7 @@ export const AnalyticsView: React.FC<AdminViewServerProps> = ({
     >
       <SetStepNav nav={steps} />
       <Gutter>
-        <h1 style={{ margin: '1rem 0 2rem' }}>Analytics Dashboard</h1>
+        <h1 style={{ margin: '1rem 0 2rem' }}>Analytics Command Center</h1>
         <AnalyticsClient />
       </Gutter>
     </DefaultTemplate>
