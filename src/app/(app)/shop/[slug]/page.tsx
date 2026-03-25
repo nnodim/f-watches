@@ -128,9 +128,7 @@ async function page({ searchParams, params }: Props) {
           </AccordionItem>
         </Accordion>
       </div>
-      {/* --- SIDEBAR END --- */}
 
-      {/* --- PRODUCT GRID START --- */}
       <div className="min-h-screen w-full">
         {searchValue ? (
           <p className="mb-4">
