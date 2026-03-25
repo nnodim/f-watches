@@ -76,13 +76,6 @@ export const CreateAccountForm: React.FC = () => {
 
   return (
     <form className="max-w-lg py-4" onSubmit={handleSubmit(onSubmit)}>
-      <div className="prose dark:prose-invert mb-6">
-        <p>
-          {`This is where new customers can signup and create a new account. To manage all users, `}
-          <Link href="/admin/collections/users">login to the admin dashboard</Link>.
-        </p>
-      </div>
-
       <Message error={error} />
 
       <div className="flex flex-col gap-8 mb-8">

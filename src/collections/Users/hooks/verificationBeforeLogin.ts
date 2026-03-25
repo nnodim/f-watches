@@ -1,5 +1,5 @@
 import { VerifyEmailHtml } from '@/components/emails/VerifyEmail'
-import { CollectionBeforeLoginHook } from 'payload'
+import { APIError, CollectionBeforeLoginHook } from 'payload'
 
 export const verificationBeforeLogin: CollectionBeforeLoginHook = async ({ req, user }) => {
   if (!user._verified) {
@@ -8,12 +8,12 @@ export const verificationBeforeLogin: CollectionBeforeLoginHook = async ({ req, 
       userEmail: user.email,
     })
 
-    req.payload.sendEmail({
+    await req.payload.sendEmail({
       to: user.email,
       subject: 'Verify Your Email Address - Fwatches',
       html,
     })
 
-    throw new Error('Please verify your email before logging in.')
+    throw new APIError('Please verify your email before logging in.', 403)
   }
 }
