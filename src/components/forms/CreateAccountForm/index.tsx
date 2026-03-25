@@ -57,14 +57,7 @@ export const CreateAccountForm: React.FC = () => {
           return
         }
 
-        const redirect = searchParams.get('redirect')
-
-        router.push(
-          redirect ||
-            `/login?success=${encodeURIComponent(
-              'Account created successfully. An email has been sent to verify your account.',
-            )}`,
-        )
+        router.push(`/check-email?email=${encodeURIComponent(data.email)}`)
       } catch {
         clearTimeout(loader)
         setLoading(false)
