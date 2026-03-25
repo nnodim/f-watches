@@ -32,6 +32,27 @@ type AuthContext = {
 
 const Context = createContext({} as AuthContext)
 
+const getErrorMessage = async (res: Response, fallback: string): Promise<string> => {
+  try {
+    const contentType = res.headers.get('content-type')
+
+    if (contentType?.includes('application/json')) {
+      const data = (await res.json()) as {
+        errors?: Array<{ message?: string }>
+        message?: string
+      }
+
+      return data.errors?.[0]?.message || data.message || fallback
+    }
+
+    const text = await res.text()
+
+    return text || fallback
+  } catch {
+    return fallback
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>()
 
@@ -88,8 +109,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return user
       }
 
-      throw new Error('Invalid login')
+      throw new Error(
+        await getErrorMessage(
+          res,
+          'There was an error with the credentials provided. Please try again.',
+        ),
+      )
     } catch (e) {
+      if (e instanceof Error) {
+        throw e
+      }
+
       throw new Error('An error occurred while attempting to login.')
     }
   }, [])
