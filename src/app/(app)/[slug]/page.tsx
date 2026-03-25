@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { RaffleShowcase } from '@/components/home/RaffleShowcase'
 import { RenderHero } from '@/heros/RenderHero'
 import { generateMeta } from '@/utilities/generateMeta'
 import configPromise from '@payload-config'
@@ -44,7 +45,7 @@ type Args = {
 
 export default async function Page({ params }: Args) {
   const { slug = 'home' } = await params
-  const url = '/' + slug
+  // const url = '/' + slug
 
   let page = await queryPageBySlug({
     slug,
@@ -64,6 +65,7 @@ export default async function Page({ params }: Args) {
   return (
     <article className="pt-16 pb-24">
       <RenderHero {...hero} />
+      {slug === 'home' && <RaffleShowcase />}
       <RenderBlocks blocks={layout} />
     </article>
   )

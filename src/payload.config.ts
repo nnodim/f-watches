@@ -30,6 +30,14 @@ import { PostCategories } from './collections/PostCategories'
 import { Expenses } from './collections/Expenses'
 import { DiscountCodes } from './collections/DiscountCodes'
 import { DebtPayments } from './collections/DebtPayments'
+import { Raffles } from './collections/Raffles'
+import { RaffleEntries } from './collections/RaffleEntries'
+import { RafflePurchases } from './collections/RafflePurchases'
+import { RaffleBonusActions } from './collections/RaffleBonusActions'
+import { runDueRafflesEndpoint, runDueRafflesGetEndpoint } from './endpoints/raffles/runDueDraws'
+import { initiateRafflePaymentEndpoint } from './endpoints/raffles/initiatePayment'
+import { confirmRafflePaymentEndpoint } from './endpoints/raffles/confirmPayment'
+import { submitRaffleBonusActionEndpoint } from './endpoints/raffles/submitBonusAction'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -66,6 +74,10 @@ export default buildConfig({
     Expenses,
     DiscountCodes,
     DebtPayments,
+    Raffles,
+    RaffleEntries,
+    RafflePurchases,
+    RaffleBonusActions,
     Pages,
     Posts,
     PostCategories,
@@ -110,7 +122,16 @@ export default buildConfig({
       ]
     },
   }),
-  endpoints: [analyticsEndpoint, applyDiscountEndpoint, paystackInitiateDiscountedEndpoint],
+  endpoints: [
+    analyticsEndpoint,
+    applyDiscountEndpoint,
+    paystackInitiateDiscountedEndpoint,
+    runDueRafflesEndpoint,
+    runDueRafflesGetEndpoint,
+    initiateRafflePaymentEndpoint,
+    confirmRafflePaymentEndpoint,
+    submitRaffleBonusActionEndpoint,
+  ],
   globals: [Header, Footer],
   email: resendAdapter({
     defaultFromAddress: 'admin@bellissimoeee.com',

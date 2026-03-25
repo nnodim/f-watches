@@ -60,6 +60,7 @@ export const  handlePaystackSuccess = async ({
       transactions: [transaction.id],
       items: cartItemsSnapshot,
     },
+    req,
   })
 
   // 3. Update Cart (Mark as purchased)
@@ -68,6 +69,7 @@ export const  handlePaystackSuccess = async ({
       id: cartID,
       collection: 'carts',
       data: { purchasedAt: new Date().toISOString() },
+      req,
     })
 
     const discountCode = updatedCart?.discountCode
@@ -78,6 +80,7 @@ export const  handlePaystackSuccess = async ({
         collection: 'discount-codes',
         id: discountCodeId,
         depth: 0,
+        req,
         select: {
           uses: true,
         },
@@ -92,6 +95,7 @@ export const  handlePaystackSuccess = async ({
         data: {
           uses: nextUses,
         },
+        req,
       })
     }
   }
@@ -137,11 +141,17 @@ export const  handlePaystackSuccess = async ({
         customerCode: paystackData.customer_code,
       },
     },
+    req,
   })
 
   // 6. Send Email (Async - don't block the return if possible, or await if critical)
   try {
-    const completeOrder = await payload.findByID({ collection: 'orders', id: order.id, depth: 2 })
+    const completeOrder = await payload.findByID({
+      collection: 'orders',
+      id: order.id,
+      depth: 2,
+      req,
+    })
     const emailHtml = await OrderConfirmationEmailHtml({ order: completeOrder })
     await payload.sendEmail({
       to: customerEmail,

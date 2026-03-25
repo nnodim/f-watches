@@ -76,6 +76,10 @@ export interface Config {
     expenses: Expense;
     'discount-codes': DiscountCode;
     'debt-payments': DebtPayment;
+    raffles: Raffle;
+    'raffle-entries': RaffleEntry;
+    'raffle-purchases': RafflePurchase;
+    'raffle-bonus-actions': RaffleBonusAction;
     pages: Page;
     posts: Post;
     postCategories: PostCategory;
@@ -104,6 +108,16 @@ export interface Config {
       orders: 'orders';
       cart: 'carts';
       addresses: 'addresses';
+      raffleEntries: 'raffle-entries';
+      rafflePurchases: 'raffle-purchases';
+      raffleBonusActions: 'raffle-bonus-actions';
+    };
+    raffles: {
+      entries: 'raffle-entries';
+      purchases: 'raffle-purchases';
+    };
+    'raffle-purchases': {
+      bonusActions: 'raffle-bonus-actions';
     };
     variantTypes: {
       options: 'variantOptions';
@@ -120,6 +134,10 @@ export interface Config {
     expenses: ExpensesSelect<false> | ExpensesSelect<true>;
     'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
     'debt-payments': DebtPaymentsSelect<false> | DebtPaymentsSelect<true>;
+    raffles: RafflesSelect<false> | RafflesSelect<true>;
+    'raffle-entries': RaffleEntriesSelect<false> | RaffleEntriesSelect<true>;
+    'raffle-purchases': RafflePurchasesSelect<false> | RafflePurchasesSelect<true>;
+    'raffle-bonus-actions': RaffleBonusActionsSelect<false> | RaffleBonusActionsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     postCategories: PostCategoriesSelect<false> | PostCategoriesSelect<true>;
@@ -224,6 +242,21 @@ export interface User {
   };
   addresses?: {
     docs?: (string | Address)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  raffleEntries?: {
+    docs?: (string | RaffleEntry)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  rafflePurchases?: {
+    docs?: (string | RafflePurchase)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  raffleBonusActions?: {
+    docs?: (string | RaffleBonusAction)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
@@ -1177,6 +1210,115 @@ export interface Address {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-entries".
+ */
+export interface RaffleEntry {
+  id: string;
+  ticketNumber: string;
+  raffle: string | Raffle;
+  purchase: string | RafflePurchase;
+  entrySource: 'purchase' | 'bonus';
+  bonusAction?: (string | null) | RaffleBonusAction;
+  customer?: (string | null) | User;
+  customerEmail: string;
+  status: 'active' | 'winner' | 'not-selected' | 'cancelled';
+  rewardType: 'none' | 'free-watch' | 'half-off';
+  rewardCode?: string | null;
+  rewardDiscountCode?: (string | null) | DiscountCode;
+  drawnAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffles".
+ */
+export interface Raffle {
+  id: string;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  status: 'scheduled' | 'open' | 'drawn' | 'cancelled';
+  description?: string | null;
+  ticketPrice?: number | null;
+  drawDate: string;
+  prizeType: 'free' | 'discount';
+  maxTickets: number;
+  eligibleProducts: (string | Product)[];
+  /**
+   * Optional expiry date for winner discount codes.
+   */
+  rewardCodeExpiresAt?: string | null;
+  drawnAt?: string | null;
+  winnerEntry?: (string | null) | RaffleEntry;
+  entries?: {
+    docs?: (string | RaffleEntry)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  purchases?: {
+    docs?: (string | RafflePurchase)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-purchases".
+ */
+export interface RafflePurchase {
+  id: string;
+  raffle: string | Raffle;
+  customer?: (string | null) | User;
+  customerEmail: string;
+  quantity: number;
+  amount: number;
+  currency: string;
+  paymentReference: string;
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  paidAt?: string | null;
+  entriesCreatedAt?: string | null;
+  bonusActions?: {
+    docs?: (string | RaffleBonusAction)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-bonus-actions".
+ */
+export interface RaffleBonusAction {
+  id: string;
+  raffle: string | Raffle;
+  purchase: string | RafflePurchase;
+  customer?: (string | null) | User;
+  customerEmail: string;
+  actionType: 'follow' | 'repost' | 'tag-page' | 'tag-friends';
+  socialHandle: string;
+  /**
+   * Required for repost, tag our page, and tag friends submissions.
+   */
+  proofScreenshot?: (string | null) | Media;
+  notes?: string | null;
+  bonusEntryCount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  bonusEntriesGranted?: boolean | null;
+  reviewedBy?: (string | null) | User;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "expenses".
  */
 export interface Expense {
@@ -1469,6 +1611,22 @@ export interface PayloadLockedDocument {
         value: string | DebtPayment;
       } | null)
     | ({
+        relationTo: 'raffles';
+        value: string | Raffle;
+      } | null)
+    | ({
+        relationTo: 'raffle-entries';
+        value: string | RaffleEntry;
+      } | null)
+    | ({
+        relationTo: 'raffle-purchases';
+        value: string | RafflePurchase;
+      } | null)
+    | ({
+        relationTo: 'raffle-bonus-actions';
+        value: string | RaffleBonusAction;
+      } | null)
+    | ({
         relationTo: 'pages';
         value: string | Page;
       } | null)
@@ -1590,6 +1748,9 @@ export interface UsersSelect<T extends boolean = true> {
   orders?: T;
   cart?: T;
   addresses?: T;
+  raffleEntries?: T;
+  rafflePurchases?: T;
+  raffleBonusActions?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1658,6 +1819,90 @@ export interface DebtPaymentsSelect<T extends boolean = true> {
   paymentMethod?: T;
   recordedBy?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffles_select".
+ */
+export interface RafflesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  status?: T;
+  description?: T;
+  ticketPrice?: T;
+  drawDate?: T;
+  prizeType?: T;
+  maxTickets?: T;
+  eligibleProducts?: T;
+  rewardCodeExpiresAt?: T;
+  drawnAt?: T;
+  winnerEntry?: T;
+  entries?: T;
+  purchases?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-entries_select".
+ */
+export interface RaffleEntriesSelect<T extends boolean = true> {
+  ticketNumber?: T;
+  raffle?: T;
+  purchase?: T;
+  entrySource?: T;
+  bonusAction?: T;
+  customer?: T;
+  customerEmail?: T;
+  status?: T;
+  rewardType?: T;
+  rewardCode?: T;
+  rewardDiscountCode?: T;
+  drawnAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-purchases_select".
+ */
+export interface RafflePurchasesSelect<T extends boolean = true> {
+  raffle?: T;
+  customer?: T;
+  customerEmail?: T;
+  quantity?: T;
+  amount?: T;
+  currency?: T;
+  paymentReference?: T;
+  status?: T;
+  paidAt?: T;
+  entriesCreatedAt?: T;
+  bonusActions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "raffle-bonus-actions_select".
+ */
+export interface RaffleBonusActionsSelect<T extends boolean = true> {
+  raffle?: T;
+  purchase?: T;
+  customer?: T;
+  customerEmail?: T;
+  actionType?: T;
+  socialHandle?: T;
+  proofScreenshot?: T;
+  notes?: T;
+  bonusEntryCount?: T;
+  status?: T;
+  bonusEntriesGranted?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+  rejectionReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }
