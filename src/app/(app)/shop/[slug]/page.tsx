@@ -43,14 +43,12 @@ async function page({ searchParams, params }: Props) {
     },
   ]
 
-  // Add search condition if it exists
   if (searchValue) {
     whereConditions.push({
       or: [{ title: { like: searchValue } }, { description: { like: searchValue } }],
     })
   }
 
-  // Add model condition if it exists
   if (model) {
     whereConditions.push({
       model: {
@@ -111,7 +109,6 @@ async function page({ searchParams, params }: Props) {
 
   return (
     <div className="container flex flex-col md:flex-row items-start justify-between gap-16 md:gap-10 mt-8">
-      {/* --- SIDEBAR START --- */}
       <div className="w-full flex-none flex flex-col gap-4 md:gap-8 basis-1/5">
         <Accordion defaultValue="item-1" type="single" collapsible>
           <AccordionItem value="item-1">
