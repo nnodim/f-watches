@@ -17,19 +17,17 @@ import { format } from 'date-fns'
 import * as React from 'react'
 import { Order, Product, Variant } from '../../payload-types'
 
-interface OrderConfirmationEmailProps {
+interface AdminOrderNotificationEmailProps {
   order: Order
 }
 
-// Helper function to format price
-const formatPrice = (amount: number, currency: 'NGN' | 'USD' = 'NGN'): string => {
+export const formatPrice = (amount: number, currency: 'NGN' | 'USD' = 'NGN'): string => {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: currency,
-  }).format(amount / 100) // Assuming amount is in kobo/cents
+  }).format(amount / 100)
 }
 
-// Helper to get product price based on currency
 const getProductPrice = (
   product: Product,
   variant: Variant | null | undefined,
@@ -43,10 +41,8 @@ const getProductPrice = (
   return currency === 'NGN' ? product.priceInNGN || 0 : product.priceInUSD || 0
 }
 
-// Helper to get variant options display
 const getVariantDisplay = (variant: Variant | string | null | undefined): string => {
   if (!variant || typeof variant === 'string') return ''
-
   if (variant.options && Array.isArray(variant.options)) {
     return variant.options
       .map((opt) => (typeof opt === 'string' ? opt : opt.value))
@@ -56,35 +52,39 @@ const getVariantDisplay = (variant: Variant | string | null | undefined): string
   return variant.title || ''
 }
 
-export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) => {
+export const AdminOrderNotificationEmail = ({ order }: AdminOrderNotificationEmailProps) => {
   const currency = order.currency || 'NGN'
-  const shippingFee = typeof (order as any).shippingFee === 'number' ? (order as any).shippingFee : 0
-
-  // Ensure items is a safe array (guard against null/undefined)
+  const shippingFee =
+    typeof (order as any).shippingFee === 'number' ? (order as any).shippingFee : 0
   const items = order.items ?? []
 
-  // Calculate subtotal
   const subtotal = items.reduce((sum, item) => {
     const product = typeof item.product === 'string' ? null : item.product
     const variant = typeof item.variant === 'string' ? null : item.variant
-
     if (!product) return sum
-
     const price = getProductPrice(product, variant, currency, (item as any)?.unitPrice)
     return sum + price * item.quantity
   }, 0)
 
   const total = subtotal + shippingFee
 
+  const adminOrderUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/admin/collections/orders/${order.id}`
+  const customerEmail =
+    order.customerEmail || (typeof order.customer !== 'string' && order.customer?.email) || 'N/A'
+
   return (
     <Html>
       <Head />
-      <Preview>Order Confirmation - Thank you for your purchase!</Preview>
+      <Preview>🛒 New Order #{order.id.slice(0, 8).toUpperCase()} — Action Required</Preview>
 
       <Body style={main}>
         <Container style={container}>
           {/* Header */}
-          <Section>
+          <Section style={alertBanner}>
+            <Text style={alertText}>🔔 NEW ORDER RECEIVED</Text>
+          </Section>
+
+          <Section style={{ padding: '32px 0 16px 0' }}>
             <Row>
               <Column>
                 <Img
@@ -94,43 +94,82 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
                   alt="Fwatches"
                 />
               </Column>
-
-              <Column align="right" style={tableCell}>
-                <Text style={heading}>Order Confirmation</Text>
+              <Column align="right" style={{ display: 'table-cell' }}>
+                <Text style={heading}>Admin Notification</Text>
               </Column>
             </Row>
+          </Section>
+
+          {/* Quick Action */}
+          <Section style={actionSection}>
+            <Text style={actionLabel}>
+              A new order has been placed and requires your attention.
+            </Text>
+            <Link href={adminOrderUrl} style={actionButton}>
+              View Order in Admin →
+            </Link>
           </Section>
 
           {/* Order Information */}
           <Section style={informationTable}>
             <Row style={informationTableRow}>
               <Column style={informationTableColumn}>
-                <Text style={informationTableLabel}>EMAIL</Text>
-                <Link style={informationTableValue}>
-                  {order.customerEmail ||
-                    (typeof order.customer !== 'string' && order.customer?.email) ||
-                    'N/A'}
+                <Text style={informationTableLabel}>ORDER ID</Text>
+                <Link href={adminOrderUrl} style={informationTableValue}>
+                  #{order.id.slice(0, 8).toUpperCase()}
                 </Link>
               </Column>
 
               <Column style={informationTableColumn}>
                 <Text style={informationTableLabel}>ORDER DATE</Text>
                 <Text style={informationTableValue}>
-                  {format(new Date(order.createdAt), 'dd MMM yyyy')}
+                  {format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm')}
                 </Text>
               </Column>
 
               <Column style={informationTableColumn}>
-                <Text style={informationTableLabel}>ORDER ID</Text>
-                <Link style={informationTableValue}>#{order.id.toUpperCase()}</Link>
+                <Text style={informationTableLabel}>STATUS</Text>
+                <Text style={{ ...informationTableValue, color: '#d97706', fontWeight: '700' }}>
+                  {order.status?.toUpperCase() || 'PROCESSING'}
+                </Text>
               </Column>
             </Row>
+          </Section>
+
+          {/* Customer Info */}
+          <Section style={customerSection}>
+            <Text style={sectionTitle}>Customer Details</Text>
+            <Row>
+              <Column style={{ width: '50%' }}>
+                <Text style={customerLabel}>Email</Text>
+                <Text style={customerValue}>{customerEmail}</Text>
+              </Column>
+              <Column style={{ width: '50%' }}>
+                <Text style={customerLabel}>Customer Type</Text>
+                <Text style={customerValue}>
+                  {order.customer ? '👤 Registered User' : '🧾 Guest Checkout'}
+                </Text>
+              </Column>
+            </Row>
+            {typeof order.customer === 'object' && order.customer && (
+              <Row style={{ marginTop: '8px' }}>
+                <Column>
+                  <Text style={customerLabel}>Customer ID</Text>
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_SERVER_URL}/admin/collections/users/${order.customer.id}`}
+                    style={{ ...customerValue, color: '#0066cc' }}
+                  >
+                    {order.customer.id}
+                  </Link>
+                </Column>
+              </Row>
+            )}
           </Section>
 
           {/* Shipping Address */}
           {order.shippingAddress && (
             <Section style={shippingSection}>
-              <Text style={shippingTitle}>Shipping Address</Text>
+              <Text style={sectionTitle}>Shipping Address</Text>
               <Text style={shippingText}>
                 {order.shippingAddress.firstName} {order.shippingAddress.lastName}
                 {order.shippingAddress.company && (
@@ -155,26 +194,24 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
                 {order.shippingAddress.phone && (
                   <>
                     <br />
-                    Phone: {order.shippingAddress.phone}
+                    📞 {order.shippingAddress.phone}
                   </>
                 )}
               </Text>
             </Section>
           )}
 
-          {/* Order Summary */}
+          {/* Order Items */}
           <Section style={productTitleTable}>
-            <Text style={productsTitle}>Order Summary</Text>
+            <Text style={productsTitle}>Order Items ({items.length})</Text>
           </Section>
 
-          {/* Product Items */}
           {items.map((item, index) => {
             const product = typeof item.product === 'string' ? null : item.product
             const variant = typeof item.variant === 'string' ? null : item.variant
 
             if (!product) return null
 
-            // Get product image
             const galleryItem = product.gallery?.[0]
             const image = galleryItem?.image
             const imageUrl = image && typeof image !== 'string' && image.url ? image.url : ''
@@ -200,22 +237,22 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
                     </Column>
                     <Column style={{ paddingLeft: '22px' }}>
                       <Text style={productTitle}>{product.title}</Text>
-                      {variantDisplay && <Text style={productDescription}>{variantDisplay}</Text>}
-                      <Text style={productDescription}>Quantity: {item.quantity}</Text>
+                      {variantDisplay && (
+                        <Text style={productDescription}>Variant: {variantDisplay}</Text>
+                      )}
+                      <Text style={productDescription}>Qty: {item.quantity}</Text>
+                      <Text style={productDescription}>
+                        Unit Price: {formatPrice(price, currency)}
+                      </Text>
                       <Link
-                        href={`${process.env.NEXT_PUBLIC_SERVER_URL}/products/${product.slug}`}
+                        href={`${process.env.NEXT_PUBLIC_SERVER_URL}/admin/collections/products/${product.id}`}
                         style={productLink}
                       >
-                        View Product
+                        View in Admin →
                       </Link>
                     </Column>
                     <Column style={productPriceWrapper} align="right">
-                      <Text style={productPrice}>{formatPrice(price, currency)}</Text>
-                      {item.quantity > 1 && (
-                        <Text style={productDescription}>
-                          Total: {formatPrice(itemTotal, currency)}
-                        </Text>
-                      )}
+                      <Text style={productPrice}>{formatPrice(itemTotal, currency)}</Text>
                     </Column>
                   </Row>
                 </Section>
@@ -245,8 +282,8 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
           <Hr style={productPriceLine} />
           <Section align="right">
             <Row>
-              <Column style={tableCell} align="right">
-                <Text style={productPriceTotal}>TOTAL</Text>
+              <Column style={{ display: 'table-cell' }} align="right">
+                <Text style={productPriceTotal}>ORDER TOTAL</Text>
               </Column>
               <Column style={productPriceVerticalLine}></Column>
               <Column style={productPriceLargeWrapper}>
@@ -255,23 +292,24 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
             </Row>
           </Section>
 
-          {/* Order Status */}
-          <Section style={statusSection}>
-            <Text style={statusText}>
-              Order Status:{' '}
-              <span style={statusBadge}>{order.status?.toUpperCase() || 'PENDING'}</span>
-            </Text>
+          {/* Admin CTA */}
+          <Section style={ctaSection}>
+            <Text style={ctaTitle}>Ready to fulfill this order?</Text>
+            <Link href={adminOrderUrl} style={ctaButton}>
+              Manage Order in Admin Panel
+            </Link>
           </Section>
 
           {/* Footer */}
           <Hr style={footerDivider} />
           <Text style={footerText}>
-            Thank you for shopping with Fwatches! We&apos;ll send you a shipping confirmation email
-            as soon as your order ships.
+            This is an automated notification from your Fwatches store. Do not reply to this email.
           </Text>
           <Text style={footerCopyright}>
-            Copyright © {new Date().getFullYear()} Fwatches. <br />
-            <Link href={process.env.NEXT_PUBLIC_SERVER_URL}>All rights reserved</Link>
+            © {new Date().getFullYear()} Fwatches Admin System. <br />
+            <Link href={process.env.NEXT_PUBLIC_SERVER_URL}>Go to Store</Link>
+            {' · '}
+            <Link href={`${process.env.NEXT_PUBLIC_SERVER_URL}/admin`}>Go to Admin</Link>
           </Text>
         </Container>
       </Body>
@@ -279,8 +317,8 @@ export const OrderConfirmationEmail = ({ order }: OrderConfirmationEmailProps) =
   )
 }
 
-export const OrderConfirmationEmailHtml = async (props: OrderConfirmationEmailProps) => {
-  return await render(<OrderConfirmationEmail {...props} />, {
+export const AdminOrderNotificationEmailHtml = async (props: AdminOrderNotificationEmailProps) => {
+  return await render(<AdminOrderNotificationEmail {...props} />, {
     pretty: true,
   })
 }
@@ -294,7 +332,7 @@ const main = {
 
 const container = {
   margin: '0 auto',
-  padding: '40px 20px',
+  padding: '0 20px 40px 20px',
   width: '600px',
   maxWidth: '100%',
   backgroundColor: '#ffffff',
@@ -302,13 +340,53 @@ const container = {
   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
 }
 
-const tableCell = { display: 'table-cell' }
+const alertBanner = {
+  backgroundColor: '#1a1a1a',
+  borderRadius: '8px 8px 0 0',
+  padding: '14px 20px',
+  textAlign: 'center' as const,
+}
+
+const alertText = {
+  color: '#ffffff',
+  fontSize: '13px',
+  fontWeight: '700',
+  letterSpacing: '1px',
+  margin: '0',
+  textTransform: 'uppercase' as const,
+}
 
 const heading = {
-  fontSize: '32px',
+  fontSize: '28px',
   fontWeight: '700',
   color: '#1a1a1a',
   margin: '0',
+}
+
+const actionSection = {
+  backgroundColor: '#fffbeb',
+  border: '1px solid #fde68a',
+  borderRadius: '6px',
+  padding: '20px',
+  marginBottom: '24px',
+  textAlign: 'center' as const,
+}
+
+const actionLabel = {
+  fontSize: '14px',
+  color: '#92400e',
+  margin: '0 0 14px 0',
+}
+
+const actionButton = {
+  display: 'inline-block',
+  backgroundColor: '#1a1a1a',
+  color: '#ffffff',
+  fontSize: '13px',
+  fontWeight: '600',
+  padding: '10px 24px',
+  borderRadius: '6px',
+  textDecoration: 'none',
 }
 
 const informationTable = {
@@ -317,7 +395,7 @@ const informationTable = {
   backgroundColor: '#f9f9f9',
   borderRadius: '6px',
   fontSize: '12px',
-  marginTop: '24px',
+  marginTop: '8px',
   overflow: 'hidden',
 }
 
@@ -351,18 +429,40 @@ const informationTableValue = {
   color: '#1a1a1a',
 }
 
-const shippingSection = {
-  marginTop: '32px',
+const customerSection = {
+  marginTop: '24px',
   padding: '20px',
   backgroundColor: '#f9f9f9',
   borderRadius: '6px',
 }
 
-const shippingTitle = {
+const sectionTitle = {
   fontSize: '14px',
   fontWeight: '600',
   color: '#1a1a1a',
   margin: '0 0 12px 0',
+}
+
+const customerLabel = {
+  fontSize: '10px',
+  fontWeight: '600',
+  color: '#666666',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
+  margin: '0 0 2px 0',
+}
+
+const customerValue = {
+  fontSize: '13px',
+  color: '#1a1a1a',
+  margin: '0',
+}
+
+const shippingSection = {
+  marginTop: '16px',
+  padding: '20px',
+  backgroundColor: '#f9f9f9',
+  borderRadius: '6px',
 }
 
 const shippingText = {
@@ -465,23 +565,30 @@ const productPriceLargeWrapper = {
   width: '120px',
 }
 
-const statusSection = {
+const ctaSection = {
   marginTop: '32px',
-  padding: '16px',
-  backgroundColor: '#f0f8ff',
+  padding: '24px',
+  backgroundColor: '#1a1a1a',
   borderRadius: '6px',
   textAlign: 'center' as const,
 }
 
-const statusText = {
-  fontSize: '14px',
-  color: '#1a1a1a',
-  margin: '0',
+const ctaTitle = {
+  fontSize: '15px',
+  fontWeight: '600',
+  color: '#ffffff',
+  margin: '0 0 16px 0',
 }
 
-const statusBadge = {
+const ctaButton = {
+  display: 'inline-block',
+  backgroundColor: '#ffffff',
+  color: '#1a1a1a',
+  fontSize: '13px',
   fontWeight: '700',
-  color: '#0066cc',
+  padding: '12px 28px',
+  borderRadius: '6px',
+  textDecoration: 'none',
 }
 
 const footerDivider = {

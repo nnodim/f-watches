@@ -28,16 +28,16 @@ export function FilterList({ list, title }: { list: ListItem[]; title?: string }
           </AccordionTrigger>
         ) : null}
         <AccordionContent>
-          <ul className="hidden md:block">
+          <ul className="">
             <Suspense fallback={null}>
               <FilterItemList list={list} />
             </Suspense>
           </ul>
-          <ul className="md:hidden">
+          {/* <ul className="md:hidden">
             <Suspense fallback={null}>
               <FilterItemDropdown list={list} />
             </Suspense>
-          </ul>
+          </ul> */}
         </AccordionContent>
       </nav>
     </React.Fragment>
