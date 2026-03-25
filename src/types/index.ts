@@ -55,6 +55,14 @@ export interface TopProduct {
   profitMargin: number
 }
 
+export interface SoldItemSummary {
+  id: string
+  name: string
+  quantitySold: number
+  ordersCount: number
+  revenue: number
+}
+
 export interface RecentOrder {
   id: string
   customer: string
@@ -86,22 +94,52 @@ export interface CustomerProfitability {
   averageOrderValue: number
 }
 
+export interface CustomerEmailSummary {
+  email: string
+  totalOrders: number
+  totalRevenue: number
+  lastOrderDate?: null | string
+}
+
+export interface TransactionSummary {
+  id: string
+  customerEmail: string
+  status: string
+  paymentMethod: string
+  amount: number
+  currency: string
+  createdAt: string
+  orderId?: string
+}
+
+export interface TransactionStatusData {
+  name: string
+  value: number
+  [key: string]: string | number
+}
+
 export interface AnalyticsData {
   overview: AnalyticsOverview
   revenueData: RevenueDataPoint[]
   orderStatusData: OrderStatusData[]
   debtStatusData: OrderStatusData[]
+  transactionStatusData: TransactionStatusData[]
   expensesByCategory: ExpenseByCategory[]
   topProducts: TopProduct[]
+  soldItems: SoldItemSummary[]
   recentOrders: RecentOrder[]
   recentDebtOrders: RecentDebtOrder[]
   topCustomers: CustomerProfitability[]
+  customerEmails: CustomerEmailSummary[]
+  recentTransactions: TransactionSummary[]
 }
 
 export type TimeRange = '7' | '30' | '90' | '365'
 
 export interface AnalyticsQuery {
   days?: string
+  startDate?: string
+  endDate?: string
 }
 
 export interface StatCardProps {
