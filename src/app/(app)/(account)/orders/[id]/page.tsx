@@ -25,6 +25,7 @@ type PageProps = {
 export default async function Order({ params, searchParams }: PageProps) {
   const headers = await getHeaders()
   const payload = await getPayload({ config: configPromise })
+
   const { user } = await payload.auth({ headers })
 
   const { id } = await params
