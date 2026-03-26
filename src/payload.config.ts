@@ -113,7 +113,7 @@ export default buildConfig({
   endpoints: [analyticsEndpoint, applyDiscountEndpoint, paystackInitiateDiscountedEndpoint],
   globals: [Header, Footer],
   email: resendAdapter({
-    defaultFromAddress: 'admin@bellissimoeee.com',
+    defaultFromAddress: 'contact@fwatches.shop',
     defaultFromName: 'Fwatches',
     apiKey: process.env.RESEND_API_KEY || '',
   }),
