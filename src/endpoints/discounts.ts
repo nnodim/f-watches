@@ -16,6 +16,8 @@ export const applyDiscountEndpoint: Endpoint = {
       secret?: string
     }
 
+    console.log(code, cartID, secret)
+
     if (!cartID) {
       return Response.json({ message: 'Cart ID is required.' }, { status: 400 })
     }
@@ -40,12 +42,15 @@ export const applyDiscountEndpoint: Endpoint = {
       },
     })
 
+    console.log(cart)
+
     if (!cart) {
       return Response.json({ message: 'Cart not found.' }, { status: 404 })
     }
 
-    const cartCustomerId =
-      typeof cart.customer === 'string' ? cart.customer : cart.customer?.id
+    const cartCustomerId = typeof cart.customer === 'string' ? cart.customer : cart.customer?.id
+
+    console.log(cartCustomerId, req.user?.id)
 
     if (req.user?.id) {
       if (cartCustomerId && cartCustomerId !== req.user.id) {
@@ -67,6 +72,8 @@ export const applyDiscountEndpoint: Endpoint = {
         },
         overrideAccess: true,
       })
+
+      console.log(updatedCart)
 
       return Response.json({ doc: updatedCart })
     }
