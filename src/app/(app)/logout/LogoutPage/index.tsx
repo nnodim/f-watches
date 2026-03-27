@@ -2,14 +2,19 @@
 
 import { useAuth } from '@/providers/Auth'
 import Link from 'next/link'
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useRef, useState } from 'react'
 
 export const LogoutPage: React.FC = (props) => {
   const { logout } = useAuth()
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const hasLoggedOut = useRef(false)
 
   useEffect(() => {
+    if (hasLoggedOut.current) return
+
+    hasLoggedOut.current = true
+
     const performLogout = async () => {
       try {
         await logout()
