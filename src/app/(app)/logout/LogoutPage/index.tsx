@@ -19,8 +19,8 @@ export const LogoutPage: React.FC = (props) => {
 
     const performLogout = async () => {
       try {
-        await logout()
         onLogout()
+        await logout()
         setSuccess('Logged out successfully.')
       } catch (_) {
         setError('You are already logged out.')
@@ -39,7 +39,7 @@ export const LogoutPage: React.FC = (props) => {
             What would you like to do next?
             <Fragment>
               {' '}
-              <Link href="/search">Click here</Link>
+              <Link href="/shop/all">Click here</Link>
               {` to shop.`}
             </Fragment>
             {` To log back in, `}
