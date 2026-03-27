@@ -6,13 +6,13 @@ import { useLayoutEffect } from 'react'
 
 export const AuthEcommerceSync = () => {
   const { status } = useAuth()
-  const { onLogin, onLogout } = useEcommerce()
+  const { onLogin } = useEcommerce()
 
   useLayoutEffect(() => {
     if (status === 'loggedIn') {
       void onLogin()
     }
-  }, [onLogin, onLogout, status])
+  }, [onLogin, status])
 
   return null
 }
