@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { AdminOrderNotificationEmailHtml, formatPrice } from '@/components/emails/AdminOrderEmail'
 import { OrderConfirmationEmailHtml } from '@/components/emails/RecieptEmail'
 import { Transaction } from '@/payload-types'
 import type { Payload, PayloadRequest } from 'payload'
@@ -10,7 +11,7 @@ type ProcessPaymentArgs = {
   req: PayloadRequest
 }
 
-export const  handlePaystackSuccess = async ({
+export const handlePaystackSuccess = async ({
   payload,
   transaction,
   paystackData,
@@ -87,7 +88,9 @@ export const  handlePaystackSuccess = async ({
       })
 
       const nextUses =
-        discountDoc && typeof (discountDoc as any).uses === 'number' ? (discountDoc as any).uses + 1 : 1
+        discountDoc && typeof (discountDoc as any).uses === 'number'
+          ? (discountDoc as any).uses + 1
+          : 1
 
       await payload.update({
         collection: 'discount-codes',
@@ -146,20 +149,25 @@ export const  handlePaystackSuccess = async ({
 
   // 6. Send Email (Async - don't block the return if possible, or await if critical)
   try {
-    const completeOrder = await payload.findByID({
-      collection: 'orders',
-      id: order.id,
-      depth: 2,
-      req,
-    })
+    const completeOrder = await payload.findByID({ collection: 'orders', id: order.id, depth: 2 })
+
+    // Existing: send to customer
     const emailHtml = await OrderConfirmationEmailHtml({ order: completeOrder })
     await payload.sendEmail({
       to: customerEmail,
       subject: `Order Confirmation - #${order.id.slice(0, 8).toUpperCase()}`,
       html: emailHtml,
     })
+
+    // New: send to admin
+    const adminEmailHtml = await AdminOrderNotificationEmailHtml({ order: completeOrder })
+    await payload.sendEmail({
+      to: process.env.ADMIN_EMAIL!, // add this to your .env
+      subject: `New Order #${order.id.toUpperCase()} - ${formatPrice(order.amount ?? 0, order.currency ?? 'NGN')}`,
+      html: adminEmailHtml,
+    })
   } catch (emailError) {
-    payload.logger.error(emailError, 'Failed to send order confirmation email')
+    payload.logger.error(emailError, 'Failed to send order emails')
   }
 
   return {

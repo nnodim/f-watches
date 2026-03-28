@@ -4,18 +4,17 @@ import type { User } from '@/payload-types'
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-// eslint-disable-next-line no-unused-vars
 type ResetPassword = (args: {
   password: string
   passwordConfirm: string
   token: string
 }) => Promise<void>
 
-type ForgotPassword = (args: { email: string }) => Promise<void> // eslint-disable-line no-unused-vars
+type ForgotPassword = (args: { email: string }) => Promise<void>
 
-type Create = (args: { email: string; password: string; passwordConfirm: string }) => Promise<void> // eslint-disable-line no-unused-vars
+type Create = (args: { email: string; password: string; passwordConfirm: string }) => Promise<void>
 
-type Login = (args: { email: string; password: string }) => Promise<User> // eslint-disable-line no-unused-vars
+type Login = (args: { email: string; password: string }) => Promise<User>
 
 type Logout = () => Promise<void>
 
@@ -25,12 +24,33 @@ type AuthContext = {
   login: Login
   logout: Logout
   resetPassword: ResetPassword
-  setUser: (user: User | null) => void // eslint-disable-line no-unused-vars
+  setUser: (user: User | null) => void
   status: 'loggedIn' | 'loggedOut' | undefined
   user?: User | null
 }
 
 const Context = createContext({} as AuthContext)
+
+const getErrorMessage = async (res: Response, fallback: string): Promise<string> => {
+  try {
+    const contentType = res.headers.get('content-type')
+
+    if (contentType?.includes('application/json')) {
+      const data = (await res.json()) as {
+        errors?: Array<{ message?: string }>
+        message?: string
+      }
+
+      return data.errors?.[0]?.message || data.message || fallback
+    }
+
+    const text = await res.text()
+
+    return text || fallback
+  } catch {
+    return fallback
+  }
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>()
@@ -88,8 +108,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return user
       }
 
-      throw new Error('Invalid login')
+      throw new Error(
+        await getErrorMessage(
+          res,
+          'There was an error with the credentials provided. Please try again.',
+        ),
+      )
     } catch (e) {
+      if (e instanceof Error) {
+        throw e
+      }
+
       throw new Error('An error occurred while attempting to login.')
     }
   }, [])
@@ -213,6 +242,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   )
 }
 
-type UseAuth<T = User> = () => AuthContext // eslint-disable-line no-unused-vars
+type UseAuth<T = User> = () => AuthContext
 
 export const useAuth: UseAuth = () => useContext(Context)

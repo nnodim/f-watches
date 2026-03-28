@@ -10,6 +10,7 @@ import localFont from 'next/font/local'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
 import { Instrument_Sans, Montserrat, EB_Garamond, Roboto } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
@@ -92,7 +93,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <LivePreviewListener />
 
           <Header />
-          <main className='font-instrument-sans'>{children}</main>
+          <main className="font-instrument-sans">
+            {children}
+            <Analytics />
+          </main>
           <Footer />
         </Providers>
       </body>

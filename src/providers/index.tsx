@@ -3,6 +3,7 @@ import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { stripeAdapterClient } from '@payloadcms/plugin-ecommerce/payments/stripe'
 import React from 'react'
 
+import { AuthEcommerceSync } from './AuthEcommerceSync'
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { SonnerProvider } from '@/providers/Sonner'
@@ -64,6 +65,7 @@ export const Providers: React.FC<{
               }),
             ]}
           >
+            <AuthEcommerceSync />
             {children}
           </EcommerceProvider>
         </HeaderThemeProvider>

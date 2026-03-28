@@ -33,12 +33,18 @@ export const LoginForm: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: FormData) => {
+      setError(null)
+
       try {
         await login(data)
         if (redirect?.current) router.push(redirect.current)
         else router.push('/account')
-      } catch (_) {
-        setError('There was an error with the credentials provided. Please try again.')
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'There was an error with the credentials provided. Please try again.',
+        )
       }
     },
     [login, router],

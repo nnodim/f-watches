@@ -41,20 +41,16 @@ const normalizeCity = (value?: null | string) => {
 
 // Key format: "<state>::<city>"
 const NIGERIA_STATE_CITY_FEES: Record<string, Partial<Record<'NGN' | 'USD', number>>> = {
-  'lagos::ikeja': { NGN: 250000 },
-  'lagos::lekki': { NGN: 300000 },
-  'fct::abuja municipal area council': { NGN: 280000 },
-  'rivers::port harcourt': { NGN: 350000 },
+  'lagos::ikeja': { NGN: 0 },
+  'lagos::lekki': { NGN: 0 },
+  'fct::abuja municipal area council': { NGN: 0 },
+  'rivers::port harcourt': { NGN: 0 },
 }
 
-const NIGERIA_STATE_DEFAULT_FEES: Record<string, Partial<Record<'NGN' | 'USD', number>>> = {
-  lagos: { NGN: 300000 },
-  fct: { NGN: 300000 },
-  rivers: { NGN: 350000 },
-}
+const NIGERIA_STATE_DEFAULT_FEES: Record<string, Partial<Record<'NGN' | 'USD', number>>> = {}
 
 const DEFAULT_NIGERIA_FEE: Partial<Record<'NGN' | 'USD', number>> = {
-  NGN: 400000,
+  NGN: 0,
 }
 
 export function getNigeriaShippingFee(args: ShippingArgs): ShippingFeeResult {
