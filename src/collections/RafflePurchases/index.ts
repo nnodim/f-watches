@@ -60,6 +60,13 @@ export const RafflePurchases: CollectionConfig = {
       unique: true,
     },
     {
+      name: 'confirmationToken',
+      type: 'text',
+      index: true,
+      required: true,
+      unique: true,
+    },
+    {
       name: 'status',
       type: 'select',
       defaultValue: 'pending',
@@ -77,6 +84,13 @@ export const RafflePurchases: CollectionConfig = {
     },
     {
       name: 'entriesCreatedAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'confirmationEmailSentAt',
       type: 'date',
       admin: {
         readOnly: true,

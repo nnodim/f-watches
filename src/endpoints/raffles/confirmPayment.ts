@@ -1,6 +1,6 @@
 import { addDataAndFileToRequest, type Endpoint } from 'payload'
 
-import { createEntriesForPurchase } from '@/lib/raffles'
+import { createEntriesForPurchase, sendRafflePurchaseConfirmationEmail } from '@/lib/raffles'
 
 const getAvailableTickets = async (
   req: Parameters<NonNullable<Endpoint['handler']>>[0],
@@ -60,6 +60,7 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
 
     if (purchase.status === 'paid' && purchase.entriesCreatedAt) {
       return Response.json({
+        confirmationToken: purchase.confirmationToken,
         message: 'Payment already confirmed.',
         purchaseID: purchase.id,
         raffleSlug:
@@ -147,7 +148,29 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
       req,
     })
 
+    if (!purchase.confirmationEmailSentAt && purchase.customerEmail) {
+      await sendRafflePurchaseConfirmationEmail({
+        confirmationToken: purchase.confirmationToken,
+        customerEmail: purchase.customerEmail,
+        payload: req.payload,
+        quantity: purchase.quantity,
+        raffleSlug: raffle.slug,
+        raffleTitle: raffle.title,
+      })
+
+      await req.payload.update({
+        collection: 'raffle-purchases',
+        id: purchase.id,
+        data: {
+          confirmationEmailSentAt: new Date().toISOString(),
+        },
+        overrideAccess: true,
+        req,
+      })
+    }
+
     return Response.json({
+      confirmationToken: purchase.confirmationToken,
       message: 'Payment confirmed.',
       purchaseID: purchase.id,
       raffleID: raffle.id,

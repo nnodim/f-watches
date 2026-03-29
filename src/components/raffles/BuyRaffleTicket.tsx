@@ -76,12 +76,10 @@ export function BuyRaffleTicket(props: {
             if (
               confirmData?.raffleSlug &&
               typeof confirmData.raffleSlug === 'string' &&
-              confirmData?.purchaseID &&
-              typeof confirmData.purchaseID === 'string'
+              confirmData?.confirmationToken &&
+              typeof confirmData.confirmationToken === 'string'
             ) {
-              router.push(
-                `/raffles/${confirmData.raffleSlug}/confirmed?purchase=${confirmData.purchaseID}`,
-              )
+              router.push(`/raffles/${confirmData.raffleSlug}/confirmed/${confirmData.confirmationToken}`)
             } else {
               router.refresh()
             }

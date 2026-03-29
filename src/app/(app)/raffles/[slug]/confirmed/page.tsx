@@ -1,7 +1,6 @@
-import { BonusActionForm } from '@/components/raffles/BonusActionForm'
-import { Button } from '@/components/ui/button'
+import { RaffleConfirmedContent } from '@/components/raffles/RaffleConfirmedContent'
 import configPromise from '@payload-config'
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
 type Args = {
@@ -16,87 +15,44 @@ type Args = {
 export default async function RaffleConfirmedPage({ params, searchParams }: Args) {
   const { slug } = await params
   const { purchase: purchaseID } = await searchParams
-  const bonusActions = purchaseID ? await queryBonusActionsByPurchase(purchaseID) : []
-  // const instagramDeepLink = buildInstagramProfileDeepLink(socialCampaignConfig.instagramUsername)
-
-  return (
-    <div className="container py-16">
-      <div className="mx-auto max-w-3xl rounded-2xl md:rounded-4xl border bg-card p-4 md:p-12">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <p className="text-xs lg:text-sm uppercase tracking-[0.3em] text-primary/60">
-              Ticket Confirmed
-            </p>
-            <h1 className="text-2xl lg:text-4xl font-semibold">Your ticket is confirmed</h1>
-            <p className="text-sm lg:text-base text-muted-foreground">
-              Want to increase your chances? Complete these steps:
-            </p>
-          </div>
-
-          {/* <div className="rounded-3xl bg-primary/5 p-4">
-            <div className="space-y-4 text-muted-foreground">
-              <div className="rounded-2xl bg-background p-3">
-                <p>1. Follow our Instagram page.</p>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild>
-                    <a href={instagramDeepLink}>Open Instagram App</a>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <a
-                      href={socialCampaignConfig.instagramProfileURL}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Open Instagram
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <div className="rounded-2xl bg-background p-3">
-                <p>2. Repost the official raffle campaign ad.</p>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild>
-                    <a href={instagramDeepLink}>Open Instagram App</a>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <a
-                      href={socialCampaignConfig.instagramProfileURL}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Open Instagram
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <p>3. Tag your friends under the campaign post.</p>
-              <p>4. Keep your repost live until the draw date.</p>
-            </div>
-          </div> */}
-
-          <div className="">
-            {/* <h2 className="text-lg lg:text-2xl font-semibold">Mark your bonus activities</h2> */}
-            <p className="mt-2 text-xs lg:text-sm text-muted-foreground">
-              Add your Instagram handle once, then tick each activity as you complete it. Checked
-              items move to pending review. Unticked items stay not submitted.
-            </p>
-            <div className="mt-6">
-              <BonusActionForm existingActions={bonusActions} purchaseID={purchaseID} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild>
-              <Link href={`/raffles/${slug}`}>Back to Raffle</Link>
-            </Button>
-            {/* <Button asChild variant="outline">
-              <Link href="/raffles">View More Raffles</Link>
-            </Button> */}
-          </div>
+  if (!purchaseID) {
+    return (
+      <div className="container py-16">
+        <div className="mx-auto max-w-2xl rounded-2xl border bg-card p-6 text-center md:p-10">
+          <h1 className="text-2xl font-semibold">Check your email for your raffle progress link</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            We send a confirmation email after ticket purchase with a direct link back to your
+            bonus activity page.
+          </p>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  const purchase = await queryPurchaseByID(purchaseID)
+
+  if (purchase?.confirmationToken) {
+    redirect(`/raffles/${slug}/confirmed/${purchase.confirmationToken}`)
+  }
+
+  const bonusActions = await queryBonusActionsByPurchase(purchaseID)
+
+  return <RaffleConfirmedContent bonusActions={bonusActions} purchaseID={purchaseID} slug={slug} />
+}
+
+const queryPurchaseByID = async (purchaseID: string) => {
+  const payload = await getPayload({ config: configPromise })
+
+  return payload.findByID({
+    collection: 'raffle-purchases',
+    id: purchaseID,
+    depth: 0,
+    overrideAccess: true,
+    select: {
+      confirmationToken: true,
+      id: true,
+    },
+  })
 }
 
 const queryBonusActionsByPurchase = async (purchaseID: string) => {
@@ -105,6 +61,7 @@ const queryBonusActionsByPurchase = async (purchaseID: string) => {
     collection: 'raffle-bonus-actions',
     depth: 0,
     limit: 50,
+    overrideAccess: true,
     pagination: false,
     where: {
       purchase: {

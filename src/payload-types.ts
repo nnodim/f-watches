@@ -1280,9 +1280,11 @@ export interface RafflePurchase {
   amount: number;
   currency: string;
   paymentReference: string;
+  confirmationToken: string;
   status: 'pending' | 'paid' | 'failed' | 'cancelled';
   paidAt?: string | null;
   entriesCreatedAt?: string | null;
+  confirmationEmailSentAt?: string | null;
   bonusActions?: {
     docs?: (string | RaffleBonusAction)[];
     hasNextPage?: boolean;
@@ -1871,9 +1873,11 @@ export interface RafflePurchasesSelect<T extends boolean = true> {
   amount?: T;
   currency?: T;
   paymentReference?: T;
+  confirmationToken?: T;
   status?: T;
   paidAt?: T;
   entriesCreatedAt?: T;
+  confirmationEmailSentAt?: T;
   bonusActions?: T;
   updatedAt?: T;
   createdAt?: T;

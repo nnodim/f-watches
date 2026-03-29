@@ -1,4 +1,5 @@
 import { addDataAndFileToRequest, type Endpoint } from 'payload'
+import { randomBytes } from 'crypto'
 
 import { currenciesConfig } from '@/lib/constants'
 
@@ -119,6 +120,7 @@ export const initiateRafflePaymentEndpoint: Endpoint = {
       collection: 'raffle-purchases',
       data: {
         amount,
+        confirmationToken: randomBytes(24).toString('hex'),
         currency: currenciesConfig.defaultCurrency,
         customer: req.user?.id,
         customerEmail,

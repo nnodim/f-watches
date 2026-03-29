@@ -1,6 +1,8 @@
 import type { Endpoint, Payload, PayloadRequest } from 'payload'
 
 import type { Raffle, RaffleEntry } from '@/payload-types'
+import { getServerSideURL } from '@/utilities/getURL'
+import { RafflePurchaseConfirmationEmailHtml } from '@/components/emails/RafflePurchaseCofirmationEmail'
 
 type DrawWinner = {
   discountCodeID: string
@@ -78,6 +80,31 @@ const sendWinnerEmail = async (args: {
         <p>Apply the code at checkout on an eligible watch product.</p>
       </div>
     `,
+  })
+}
+
+export const sendRafflePurchaseConfirmationEmail = async (args: {
+  confirmationToken: string
+  customerEmail: string
+  payload: Payload
+  quantity: number
+  raffleSlug: string
+  raffleTitle: string
+}) => {
+  const { confirmationToken, customerEmail, payload, quantity, raffleSlug, raffleTitle } = args
+
+  const html = await RafflePurchaseConfirmationEmailHtml({
+    confirmationToken,
+    customerEmail,
+    quantity,
+    raffleSlug,
+    raffleTitle,
+  })
+
+  await payload.sendEmail({
+    to: customerEmail,
+    subject: `Your ${raffleTitle} ticket is confirmed`,
+    html,
   })
 }
 
