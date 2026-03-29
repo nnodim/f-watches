@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/raffles/run-due-draws",
-      "schedule": "0 * * * *"
+      "schedule": "0 21 * * *"
     }
   ]
 }
