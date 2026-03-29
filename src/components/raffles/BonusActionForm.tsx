@@ -118,7 +118,7 @@ export function BonusActionForm(props: { existingActions: BonusAction[]; purchas
         />
       </div>
 
-      <div className="space-y-3 rounded-3xl border p-6">
+      <div className="space-y-3">
         {actionOptions.map((option) => {
           const status = actionStatusMap.get(option.value) || 'not submitted'
           const isChecked = status === 'pending' || status === 'approved'
@@ -126,7 +126,7 @@ export function BonusActionForm(props: { existingActions: BonusAction[]; purchas
 
           return (
             <div
-              className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-4"
+              className="flex items-center justify-between gap-2 md:gap-4 rounded-2xl border p-2 lg:p-4"
               key={option.value}
             >
               <div className="flex items-start gap-3">
@@ -148,7 +148,7 @@ export function BonusActionForm(props: { existingActions: BonusAction[]; purchas
                   </p>
                 </div>
               </div>
-              <span className="text-sm capitalize text-muted-foreground">{status}</span>
+              <span className="text-xs capitalize text-muted-foreground">{status}</span>
             </div>
           )
         })}

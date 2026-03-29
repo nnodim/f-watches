@@ -22,19 +22,19 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
 
   return (
     <div className="container py-16">
-      <div className="mx-auto max-w-3xl rounded-4xl border bg-card p-8 md:p-12">
+      <div className="mx-auto max-w-3xl rounded-4xl border bg-card p-6 md:p-12">
         <div className="space-y-8">
           <div className="space-y-4">
-            <p className="text-sm uppercase tracking-[0.3em] text-primary/60">Ticket Confirmed</p>
-            <h1 className="text-4xl font-semibold">Your ticket is confirmed</h1>
-            <p className="text-base text-muted-foreground">
+            <p className="text-xs lg:text-sm uppercase tracking-[0.3em] text-primary/60">Ticket Confirmed</p>
+            <h1 className="text-2xl lg:text-4xl font-semibold">Your ticket is confirmed</h1>
+            <p className="text-sm lg:text-base text-muted-foreground">
               Want to increase your chances? Complete these steps:
             </p>
           </div>
 
-          <div className="rounded-3xl bg-primary/5 p-6">
+          <div className="rounded-3xl bg-primary/5 p-4">
             <div className="space-y-4 text-muted-foreground">
-              <div className="rounded-2xl bg-background p-4">
+              <div className="rounded-2xl bg-background p-3">
                 <p>1. Follow our Instagram page.</p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                   {/* <Button asChild>
@@ -51,7 +51,7 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
                   </Button>
                 </div>
               </div>
-              <div className="rounded-2xl bg-background p-4">
+              <div className="rounded-2xl bg-background p-3">
                 <p>2. Repost the official raffle campaign ad.</p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                   {/* <Button asChild>
@@ -73,9 +73,9 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
             </div>
           </div>
 
-          <div className="rounded-3xl border p-6">
-            <h2 className="text-2xl font-semibold">Mark your bonus activities</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+          <div className="rounded-3xl border p-4">
+            <h2 className="text-lg lg:text-2xl font-semibold">Mark your bonus activities</h2>
+            <p className="mt-2 text-xs lg:text-sm text-muted-foreground">
               Add your Instagram handle once, then tick each activity as you complete it. Checked
               items move to pending review. Unticked items stay not submitted.
             </p>
@@ -88,9 +88,9 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
             <Button asChild>
               <Link href={`/raffles/${slug}`}>Back to Raffle</Link>
             </Button>
-            <Button asChild variant="outline">
+            {/* <Button asChild variant="outline">
               <Link href="/raffles">View More Raffles</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

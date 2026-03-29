@@ -39,7 +39,6 @@ export const submitRaffleBonusActionEndpoint: Endpoint = {
       collection: 'raffle-purchases',
       id: purchaseID,
       depth: 0,
-      overrideAccess: false,
       req,
       select: {
         customer: true,
@@ -72,7 +71,6 @@ export const submitRaffleBonusActionEndpoint: Endpoint = {
       collection: 'raffle-bonus-actions',
       depth: 0,
       limit: 50,
-      overrideAccess: false,
       pagination: false,
       req,
       where: {

@@ -18,7 +18,6 @@ const getReservedTickets = async (
     collection: 'raffle-purchases',
     depth: 0,
     limit: 1000,
-    overrideAccess: false,
     pagination: false,
     req,
     where: {
@@ -80,7 +79,6 @@ export const initiateRafflePaymentEndpoint: Endpoint = {
       collection: 'raffles',
       id: raffleID,
       depth: 0,
-      overrideAccess: false,
       req,
       select: {
         id: true,
@@ -129,6 +127,7 @@ export const initiateRafflePaymentEndpoint: Endpoint = {
         raffle: raffleID,
         status: 'pending',
       },
+      overrideAccess: true,
       req,
     })
 
@@ -156,6 +155,7 @@ export const initiateRafflePaymentEndpoint: Endpoint = {
       await req.payload.delete({
         collection: 'raffle-purchases',
         id: purchase.id,
+        overrideAccess: true,
         req,
       })
 

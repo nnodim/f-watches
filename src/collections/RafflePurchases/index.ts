@@ -2,11 +2,12 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { adminOrRafflePurchaseOwner } from '@/access/adminOrRafflePurchaseOwner'
+import { publicAccess } from '@/access/publicAccess'
 
 export const RafflePurchases: CollectionConfig = {
   slug: 'raffle-purchases',
   access: {
-    create: adminOnly,
+    create: publicAccess,
     delete: adminOnly,
     read: adminOrRafflePurchaseOwner,
     update: adminOnly,

@@ -22,16 +22,16 @@ export async function RaffleShowcase() {
   if (!raffle) return null
 
   return (
-    <section className="container mt-14">
-      <div className="overflow-hidden rounded-[2.5rem] border bg-linear-to-br from-[#15090a] via-[#3b0f12] to-[#120505] text-white shadow-[0_30px_100px_rgba(136,18,26,0.28)]">
-        <div className="grid gap-10 px-6 py-8 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-14">
-          <div className="space-y-6">
+    <section className="container mt-14 w-full">
+      <div className="overflow-hidden rounded-3xl md:rounded-[2.5rem] border bg-linear-to-br from-[#15090a] via-[#3b0f12] to-[#120505] text-white shadow-[0_30px_100px_rgba(136,18,26,0.28)] w-full">
+        <div className="w-full grid gap-10 px-3 py-4 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-14">
+          <div className="space-y-6 w-full">
             <div className="space-y-3">
               <p className="text-xs uppercase tracking-[0.35em] text-[#f7d27c]">Live Raffle</p>
-              <h2 className="max-w-xl text-4xl font-semibold leading-tight md:text-5xl">
+              <h2 className="max-w-xl w-full text-3xl font-semibold leading-tight md:text-5xl">
                 {raffle.title}
               </h2>
-              <p className="max-w-xl text-base leading-7 text-white/75">
+              <p className="max-w-xl w-full text-base leading-7 text-white/75">
                 {raffle.description ||
                   'Buy a raffle ticket on our site and get a shot at winning something special before draw day.'}
               </p>

@@ -13,7 +13,6 @@ const getAvailableTickets = async (
     collection: 'raffle-entries',
     depth: 0,
     limit: 5000,
-    overrideAccess: false,
     pagination: false,
     req,
     where: {
@@ -44,7 +43,6 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
       collection: 'raffle-purchases',
       depth: 1,
       limit: 1,
-      overrideAccess: false,
       pagination: false,
       req,
       where: {
@@ -93,6 +91,7 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
         data: {
           status: 'failed',
         },
+        overrideAccess: true,
         req,
       })
 
@@ -138,6 +137,7 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
         paidAt: paymentData.paid_at,
         status: 'paid',
       },
+      overrideAccess: true,
       req,
     })
 

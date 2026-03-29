@@ -91,7 +91,7 @@ export const createEntriesForPurchase = async (args: {
     collection: 'raffle-purchases',
     id: purchaseID,
     depth: 0,
-    overrideAccess: false,
+    overrideAccess: true,
     req,
     select: {
       customer: true,
@@ -113,7 +113,7 @@ export const createEntriesForPurchase = async (args: {
 
   const count = await payload.count({
     collection: 'raffle-entries',
-    overrideAccess: false,
+    overrideAccess: true,
     req,
   })
 
@@ -131,6 +131,7 @@ export const createEntriesForPurchase = async (args: {
         status: 'active',
         ticketNumber: buildTicketNumber(raffleID, (index + 1) as number),
       },
+      overrideAccess: true,
       req,
     })
   }
@@ -141,6 +142,7 @@ export const createEntriesForPurchase = async (args: {
     data: {
       entriesCreatedAt: new Date().toISOString(),
     },
+    overrideAccess: true,
     req,
   })
 }
