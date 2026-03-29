@@ -62,9 +62,3 @@ export const currenciesConfig: CurrenciesConfig = {
   defaultCurrency: 'NGN',
   supportedCurrencies: [NGN, USD],
 }
-
-export const socialCampaignConfig = {
-  instagramProfileURL:
-    process.env.NEXT_PUBLIC_INSTAGRAM_PROFILE_URL || 'https://www.instagram.com/shopfwatches/',
-  instagramUsername: process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || 'Fwatches',
-} as const
