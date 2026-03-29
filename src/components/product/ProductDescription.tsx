@@ -1,17 +1,17 @@
 'use client'
 import type { Product, Variant } from '@/payload-types'
 
-import { RichText } from '@/components/RichText'
 import { AddToCart } from '@/components/Cart/AddToCart'
 import { Price } from '@/components/Price'
+import { RichText } from '@/components/RichText'
+import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import React, { Suspense } from 'react'
 
-import { VariantSelector } from './VariantSelector'
-import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
-import { StockIndicator } from '@/components/product/StockIndicator'
 import RelatedProducts from '../RelatedProducts'
 import { getEffectivePrice } from '@/lib/pricing'
 import { cn } from '@/utilities/cn'
+import { StockIndicator } from '@/components/product/StockIndicator'
+import { VariantSelector } from './VariantSelector'
 
 export function ProductDescription({ product }: { product: Product }) {
   const { currency } = useCurrency()
@@ -53,7 +53,7 @@ export function ProductDescription({ product }: { product: Product }) {
           {hasVariants ? (
             <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
           ) : (
-            <div className="flex flex-col gap-1 items-end">
+            <div className="flex flex-col items-end gap-1">
               <Price
                 className={cn('text-2xl font-semibold', {
                   'text-red-400': compareAt && compareAt > amount,
@@ -76,18 +76,14 @@ export function ProductDescription({ product }: { product: Product }) {
         <div>
           <RelatedProducts small={true} products={relatedProducts as Product[]} />
         </div>
-      ) : (
-        <></>
-      )}
+      ) : null}
 
       {hasVariants && (
         <>
           <hr />
-
           <Suspense fallback={null}>
             <VariantSelector product={product} />
           </Suspense>
-
           <hr />
         </>
       )}

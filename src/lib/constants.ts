@@ -62,4 +62,3 @@ export const currenciesConfig: CurrenciesConfig = {
   defaultCurrency: 'NGN',
   supportedCurrencies: [NGN, USD],
 }
-

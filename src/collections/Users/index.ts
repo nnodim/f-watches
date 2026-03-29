@@ -129,5 +129,35 @@ export const Users: CollectionConfig = {
         defaultColumns: ['id'],
       },
     },
+    {
+      name: 'raffleEntries',
+      type: 'join',
+      collection: 'raffle-entries',
+      on: 'customer',
+      admin: {
+        allowCreate: false,
+        defaultColumns: ['ticketNumber', 'raffle', 'status', 'rewardType', 'createdAt'],
+      },
+    },
+    {
+      name: 'rafflePurchases',
+      type: 'join',
+      collection: 'raffle-purchases',
+      on: 'customer',
+      admin: {
+        allowCreate: false,
+        defaultColumns: ['raffle', 'quantity', 'amount', 'status', 'createdAt'],
+      },
+    },
+    {
+      name: 'raffleBonusActions',
+      type: 'join',
+      collection: 'raffle-bonus-actions',
+      on: 'customer',
+      admin: {
+        allowCreate: false,
+        defaultColumns: ['actionType', 'platform', 'status', 'bonusEntryCount', 'createdAt'],
+      },
+    },
   ],
 }
