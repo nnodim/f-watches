@@ -98,7 +98,6 @@ export const RaffleBonusActions: CollectionConfig = {
       options: [
         { label: 'Follow page', value: 'follow' },
         { label: 'Repost campaign ad', value: 'repost' },
-        { label: 'Tag our page', value: 'tag-page' },
         { label: 'Tag friends', value: 'tag-friends' },
       ],
     },
@@ -106,19 +105,6 @@ export const RaffleBonusActions: CollectionConfig = {
       name: 'socialHandle',
       type: 'text',
       required: true,
-    },
-    {
-      name: 'proofScreenshot',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        condition: (_, siblingData) => siblingData?.actionType !== 'follow',
-        description: 'Required for repost, tag our page, and tag friends submissions.',
-      },
-    },
-    {
-      name: 'notes',
-      type: 'textarea',
     },
     {
       name: 'bonusEntryCount',
@@ -161,13 +147,6 @@ export const RaffleBonusActions: CollectionConfig = {
       type: 'date',
       admin: {
         readOnly: true,
-      },
-    },
-    {
-      name: 'rejectionReason',
-      type: 'textarea',
-      admin: {
-        condition: (_, siblingData) => siblingData?.status === 'rejected',
       },
     },
   ],

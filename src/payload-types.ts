@@ -1301,19 +1301,13 @@ export interface RaffleBonusAction {
   purchase: string | RafflePurchase;
   customer?: (string | null) | User;
   customerEmail: string;
-  actionType: 'follow' | 'repost' | 'tag-page' | 'tag-friends';
+  actionType: 'follow' | 'repost' | 'tag-friends';
   socialHandle: string;
-  /**
-   * Required for repost, tag our page, and tag friends submissions.
-   */
-  proofScreenshot?: (string | null) | Media;
-  notes?: string | null;
   bonusEntryCount: number;
   status: 'pending' | 'approved' | 'rejected';
   bonusEntriesGranted?: boolean | null;
   reviewedBy?: (string | null) | User;
   reviewedAt?: string | null;
-  rejectionReason?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1895,14 +1889,11 @@ export interface RaffleBonusActionsSelect<T extends boolean = true> {
   customerEmail?: T;
   actionType?: T;
   socialHandle?: T;
-  proofScreenshot?: T;
-  notes?: T;
   bonusEntryCount?: T;
   status?: T;
   bonusEntriesGranted?: T;
   reviewedBy?: T;
   reviewedAt?: T;
-  rejectionReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }

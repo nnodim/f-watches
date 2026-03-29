@@ -21,23 +21,20 @@ import { Pages } from '@/collections/Pages'
 import { Users } from '@/collections/Users'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
-import { plugins } from './plugins'
+import { DebtPayments } from './collections/DebtPayments'
+import { DiscountCodes } from './collections/DiscountCodes'
+import { Expenses } from './collections/Expenses'
+import { Posts } from './collections/Post'
+import { PostCategories } from './collections/PostCategories'
+import { RaffleBonusActions } from './collections/RaffleBonusActions'
+import { RaffleEntries } from './collections/RaffleEntries'
+import { RafflePurchases } from './collections/RafflePurchases'
+import { Raffles } from './collections/Raffles'
 import { analyticsEndpoint } from './endpoints/analytics'
 import { applyDiscountEndpoint } from './endpoints/discounts'
 import { paystackInitiateDiscountedEndpoint } from './endpoints/payments/paystackInitiate'
-import { Posts } from './collections/Post'
-import { PostCategories } from './collections/PostCategories'
-import { Expenses } from './collections/Expenses'
-import { DiscountCodes } from './collections/DiscountCodes'
-import { DebtPayments } from './collections/DebtPayments'
-import { Raffles } from './collections/Raffles'
-import { RaffleEntries } from './collections/RaffleEntries'
-import { RafflePurchases } from './collections/RafflePurchases'
-import { RaffleBonusActions } from './collections/RaffleBonusActions'
 import { runDueRafflesEndpoint, runDueRafflesGetEndpoint } from './endpoints/raffles/runDueDraws'
-import { initiateRafflePaymentEndpoint } from './endpoints/raffles/initiatePayment'
-import { confirmRafflePaymentEndpoint } from './endpoints/raffles/confirmPayment'
-import { submitRaffleBonusActionEndpoint } from './endpoints/raffles/submitBonusAction'
+import { plugins } from './plugins'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -128,9 +125,6 @@ export default buildConfig({
     paystackInitiateDiscountedEndpoint,
     runDueRafflesEndpoint,
     runDueRafflesGetEndpoint,
-    initiateRafflePaymentEndpoint,
-    confirmRafflePaymentEndpoint,
-    submitRaffleBonusActionEndpoint,
   ],
   globals: [Header, Footer],
   email: resendAdapter({

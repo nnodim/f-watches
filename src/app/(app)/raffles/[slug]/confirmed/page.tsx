@@ -69,24 +69,19 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
                   </Button>
                 </div>
               </div>
-              <p>3. Tag our page in your repost.</p>
-              <p>4. Tag your friends under the campaign post.</p>
-              <p>5. Keep your repost live until the draw date.</p>
+              <p>3. Tag your friends under the campaign post.</p>
+              <p>4. Keep your repost live until the draw date.</p>
             </div>
           </div>
 
           <div className="rounded-3xl border p-6">
-            <h2 className="text-2xl font-semibold">Submit bonus activity proof</h2>
+            <h2 className="text-2xl font-semibold">Mark your bonus activities</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Submit each completed activity for review. Approved activities will be rewarded with
-              extra raffle entries automatically.
+              Add your Instagram handle once, then tick each activity as you complete it. Checked
+              items move to pending review. Unticked items stay not submitted.
             </p>
             <div className="mt-6">
-              <BonusActionForm
-                existingActions={bonusActions}
-                purchaseID={purchaseID}
-                raffleID={slug}
-              />
+              <BonusActionForm existingActions={bonusActions} purchaseID={purchaseID} />
             </div>
           </div>
 
@@ -120,8 +115,8 @@ const queryBonusActionsByPurchase = async (purchaseID: string) => {
 
   return result.docs.map((doc) => ({
     actionType: doc.actionType,
-    bonusEntryCount: doc.bonusEntryCount,
     id: doc.id,
+    socialHandle: doc.socialHandle,
     status: doc.status,
   }))
 }

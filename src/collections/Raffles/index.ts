@@ -2,12 +2,12 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { publicAccess } from '@/access/publicAccess'
-import { buildRaffleDrawEndpoint } from '@/lib/raffles'
-import { slugField } from 'payload'
-import { initiateRafflePaymentEndpoint } from '@/endpoints/raffles/initiatePayment'
 import { confirmRafflePaymentEndpoint } from '@/endpoints/raffles/confirmPayment'
-import { amountField } from '@payloadcms/plugin-ecommerce'
+import { initiateRafflePaymentEndpoint } from '@/endpoints/raffles/initiatePayment'
 import { currenciesConfig } from '@/lib/constants'
+import { buildRaffleDrawEndpoint } from '@/lib/raffles'
+import { amountField } from '@payloadcms/plugin-ecommerce'
+import { slugField } from 'payload'
 import { submitRaffleBonusActionEndpoint } from '@/endpoints/raffles/submitBonusAction'
 
 export const Raffles: CollectionConfig = {
