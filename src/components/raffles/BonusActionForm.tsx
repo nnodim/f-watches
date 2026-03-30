@@ -18,12 +18,23 @@ type BonusAction = {
 }
 
 const actionOptions = [
-  { bonusEntryCount: 1, description: 'Follow our Instagram page', value: 'follow' },
-  { bonusEntryCount: 1, description: 'Repost the official campaign ad', value: 'repost' },
+  {
+    bonusEntryCount: 1,
+    description: 'Follow our Instagram page',
+    value: 'follow',
+    href: socialCampaignConfig.instagramProfileURL,
+  },
+  {
+    bonusEntryCount: 1,
+    description: 'Repost the official campaign ad',
+    value: 'repost',
+    href: socialCampaignConfig.instagramCampaignURL,
+  },
   {
     bonusEntryCount: 1,
     description: 'Tag 3 friends under the campaign post',
     value: 'tag-friends',
+    href: socialCampaignConfig.instagramCampaignURL,
   },
 ]
 
@@ -154,13 +165,7 @@ export function BonusActionForm(props: { existingActions: BonusAction[]; purchas
                     variant="outline"
                     className="px-2 md:px-4 font-normal text-xs md:text-sm"
                   >
-                    <a
-                      href={
-                        option.value === 'follow' ? socialCampaignConfig.instagramProfileURL : ''
-                      }
-                      rel="noreferrer"
-                      target="_blank"
-                    >
+                    <a href={option.href} rel="noreferrer" target="_blank">
                       Open Instagram
                     </a>
                   </Button>
