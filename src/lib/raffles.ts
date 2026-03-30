@@ -89,15 +89,18 @@ export const sendRafflePurchaseConfirmationEmail = async (args: {
   payload: Payload
   quantity: number
   raffleSlug: string
+  ticketNumbers: string[]
   raffleTitle: string
 }) => {
-  const { confirmationToken, customerEmail, payload, quantity, raffleSlug, raffleTitle } = args
+  const { confirmationToken, customerEmail, payload, quantity, raffleSlug, ticketNumbers, raffleTitle } =
+    args
 
   const html = await RafflePurchaseConfirmationEmailHtml({
     confirmationToken,
     customerEmail,
     quantity,
     raffleSlug,
+    ticketNumbers,
     raffleTitle,
   })
 
@@ -106,6 +109,30 @@ export const sendRafflePurchaseConfirmationEmail = async (args: {
     subject: `Your ${raffleTitle} ticket is confirmed`,
     html,
   })
+}
+
+export const getTicketNumbersByPurchase = async (args: {
+  payload: Payload
+  purchaseID: string
+  req: PayloadRequest
+}) => {
+  const { payload, purchaseID, req } = args
+  const entries = await payload.find({
+    collection: 'raffle-entries',
+    depth: 0,
+    limit: 100,
+    overrideAccess: true,
+    pagination: false,
+    req,
+    sort: 'ticketNumber',
+    where: {
+      purchase: {
+        equals: purchaseID,
+      },
+    },
+  })
+
+  return entries.docs.map((entry) => entry.ticketNumber).filter((value): value is string => Boolean(value))
 }
 
 export const createEntriesForPurchase = async (args: {
