@@ -13,8 +13,9 @@ export function RaffleConfirmedContent(props: {
   bonusActions: BonusAction[]
   purchaseID?: string
   slug: string
+  ticketNumbers?: string[]
 }) {
-  const { bonusActions, purchaseID, slug } = props
+  const { bonusActions, purchaseID, slug, ticketNumbers = [] } = props
 
   return (
     <div className="container py-16">
@@ -31,6 +32,15 @@ export function RaffleConfirmedContent(props: {
           </div>
 
           <div>
+            {ticketNumbers.length > 0 && (
+              <div className="rounded-2xl border bg-primary/5 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-primary/60">Your Tickets</p>
+                <p className="mt-2 text-sm font-medium text-foreground lg:text-base">
+                  {ticketNumbers.join(', ')}
+                </p>
+              </div>
+            )}
+
             <p className="mt-2 text-xs text-muted-foreground lg:text-sm">
               Add your Instagram handle once, then tick each activity as you complete it. Checked
               items move to pending review. Unticked items stay not submitted.

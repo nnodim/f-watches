@@ -36,8 +36,16 @@ export default async function RaffleConfirmedPage({ params, searchParams }: Args
   }
 
   const bonusActions = await queryBonusActionsByPurchase(purchaseID)
+  const ticketNumbers = await queryTicketNumbersByPurchase(purchaseID)
 
-  return <RaffleConfirmedContent bonusActions={bonusActions} purchaseID={purchaseID} slug={slug} />
+  return (
+    <RaffleConfirmedContent
+      bonusActions={bonusActions}
+      purchaseID={purchaseID}
+      slug={slug}
+      ticketNumbers={ticketNumbers}
+    />
+  )
 }
 
 const queryPurchaseByID = async (purchaseID: string) => {
@@ -76,4 +84,23 @@ const queryBonusActionsByPurchase = async (purchaseID: string) => {
     socialHandle: doc.socialHandle,
     status: doc.status,
   }))
+}
+
+const queryTicketNumbersByPurchase = async (purchaseID: string) => {
+  const payload = await getPayload({ config: configPromise })
+  const result = await payload.find({
+    collection: 'raffle-entries',
+    depth: 0,
+    limit: 100,
+    overrideAccess: true,
+    pagination: false,
+    sort: 'ticketNumber',
+    where: {
+      purchase: {
+        equals: purchaseID,
+      },
+    },
+  })
+
+  return result.docs.map((doc) => doc.ticketNumber).filter((value): value is string => Boolean(value))
 }

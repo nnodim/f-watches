@@ -1,6 +1,10 @@
 import { addDataAndFileToRequest, type Endpoint } from 'payload'
 
-import { createEntriesForPurchase, sendRafflePurchaseConfirmationEmail } from '@/lib/raffles'
+import {
+  createEntriesForPurchase,
+  getTicketNumbersByPurchase,
+  sendRafflePurchaseConfirmationEmail,
+} from '@/lib/raffles'
 
 const getAvailableTickets = async (
   req: Parameters<NonNullable<Endpoint['handler']>>[0],
@@ -148,6 +152,12 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
       req,
     })
 
+    const ticketNumbers = await getTicketNumbersByPurchase({
+      payload: req.payload,
+      purchaseID: purchase.id,
+      req,
+    })
+
     if (!purchase.confirmationEmailSentAt && purchase.customerEmail) {
       await sendRafflePurchaseConfirmationEmail({
         confirmationToken: purchase.confirmationToken,
@@ -155,6 +165,7 @@ export const confirmRafflePaymentEndpoint: Endpoint = {
         payload: req.payload,
         quantity: purchase.quantity,
         raffleSlug: raffle.slug,
+        ticketNumbers,
         raffleTitle: raffle.title,
       })
 

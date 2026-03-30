@@ -19,6 +19,7 @@ interface RafflePurchaseConfirmationEmailProps {
   customerEmail: string
   quantity: number
   raffleSlug: string
+  ticketNumbers: string[]
   raffleTitle: string
 }
 
@@ -27,6 +28,7 @@ export const RafflePurchaseConfirmationEmail = ({
   customerEmail,
   quantity,
   raffleSlug,
+  ticketNumbers,
   raffleTitle,
 }: RafflePurchaseConfirmationEmailProps) => {
   const manageURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/raffles/${raffleSlug}/confirmed/${confirmationToken}`
@@ -60,6 +62,13 @@ export const RafflePurchaseConfirmationEmail = ({
               <Text style={ticketCount}>{quantity}</Text>
               <Text style={ticketSub}>ticket{quantity === 1 ? '' : 's'}</Text>
             </Section>
+
+            {ticketNumbers.length > 0 && (
+              <Section style={ticketNumbersBox}>
+                <Text style={ticketNumbersLabel}>Your Ticket Number{ticketNumbers.length === 1 ? '' : 's'}</Text>
+                <Text style={ticketNumbersValue}>{ticketNumbers.join(', ')}</Text>
+              </Section>
+            )}
 
             <Text style={paragraph}>
               Track your entry and complete bonus activities to improve your chances:
@@ -181,6 +190,30 @@ const ticketSub = {
   fontSize: '14px',
   color: '#999999',
   margin: '4px 0 0',
+}
+
+const ticketNumbersBox = {
+  backgroundColor: '#f8f8f8',
+  border: '1px solid #e5e5e5',
+  borderRadius: '8px',
+  padding: '20px',
+  margin: '0 0 24px',
+}
+
+const ticketNumbersLabel = {
+  fontSize: '12px',
+  fontWeight: '600',
+  color: '#666666',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '1px',
+  margin: '0 0 8px',
+}
+
+const ticketNumbersValue = {
+  fontSize: '16px',
+  lineHeight: '1.7',
+  color: '#1a1a1a',
+  margin: '0',
 }
 
 const buttonSection = {
