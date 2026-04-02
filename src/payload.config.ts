@@ -119,13 +119,7 @@ export default buildConfig({
       ]
     },
   }),
-  endpoints: [
-    analyticsEndpoint,
-    applyDiscountEndpoint,
-    paystackInitiateDiscountedEndpoint,
-    runDueRafflesEndpoint,
-    runDueRafflesGetEndpoint,
-  ],
+  endpoints: [analyticsEndpoint, applyDiscountEndpoint, paystackInitiateDiscountedEndpoint],
   globals: [Header, Footer],
   email: resendAdapter({
     defaultFromAddress: 'contact@fwatches.shop',

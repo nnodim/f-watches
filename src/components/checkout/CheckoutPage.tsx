@@ -65,7 +65,10 @@ export const CheckoutPage: React.FC = () => {
   })
   const shippingFee = shippingFeeResult.amount
   const grandTotal =
-    (cart?.total || cart?.subtotal || 0) + (typeof shippingFee === 'number' ? shippingFee : 0)
+    (cart?.total || 0) + (typeof shippingFee === 'number' ? shippingFee : 0)
+
+    console.log(grandTotal);
+    
   const canPay = canGoToPayment && typeof shippingFee === 'number'
 
   const applyDiscount = useCallback(async () => {
@@ -162,6 +165,14 @@ export const CheckoutPage: React.FC = () => {
 
       const paymentData = (await response.json()) as Record<string, unknown>
 
+      if (paymentData?.zeroAmount && paymentData?.orderID && typeof paymentData.orderID === 'string') {
+        const redirectUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/orders/${paymentData.orderID}${customerEmail ? `?email=${customerEmail}` : ''}`
+        clearCart()
+        toast.success('Order completed successfully. Redirecting to your order...')
+        router.push(redirectUrl)
+        return
+      }
+
       if (paymentData && paymentData.accessCode) {
         const PaystackPop = (await import('@paystack/inline-js')).default
         const popup = new PaystackPop()
@@ -207,6 +218,8 @@ export const CheckoutPage: React.FC = () => {
           },
         })
       }
+
+      throw new Error('Payment initialization did not return a valid checkout session.')
     } catch (error) {
       console.log(error)
 

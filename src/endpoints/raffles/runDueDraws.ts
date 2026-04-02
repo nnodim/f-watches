@@ -40,13 +40,13 @@ const handler: Endpoint['handler'] = async (req) => {
 
 export const runDueRafflesEndpoint: Endpoint = {
   method: 'post',
-  path: '/raffles/run-due-draws',
+  path: '/run-due-draws',
   handler,
 }
 
 export const runDueRafflesGetEndpoint: Endpoint = {
   method: 'get',
-  path: '/raffles/run-due-draws',
+  path: '/run-due-draws',
   handler: async (req) => {
     return handler(req)
   },

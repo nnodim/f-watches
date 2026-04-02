@@ -1,7 +1,9 @@
 import { Price } from '@/components/Price'
 import { BuyRaffleTicket } from '@/components/raffles/BuyRaffleTicket'
 import { RaffleCountdown } from '@/components/raffles/RaffleCountdown'
+import { Button } from '@/components/ui/button'
 import configPromise from '@payload-config'
+import Link from 'next/link'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
@@ -74,6 +76,15 @@ export default async function RaffleDetailPage({ params }: Args) {
               </p>
               <p>Each purchased ticket creates one entry. More tickets means more entries.</p>
               <p>Draw date: {new Date(raffle.drawDate).toLocaleDateString()}</p>
+              <p>
+                Want to watch the draw happen? Visit the transparent draw page to follow the
+                countdown and see the winner published.
+              </p>
+            </div>
+            <div className="mt-5">
+              <Button asChild variant="outline">
+                <Link href={`/raffles/${slug}/draw`}>View Draw Page</Link>
+              </Button>
             </div>
           </div>
         </section>

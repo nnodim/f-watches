@@ -9,6 +9,7 @@ import { buildRaffleDrawEndpoint } from '@/lib/raffles'
 import { amountField } from '@payloadcms/plugin-ecommerce'
 import { slugField } from 'payload'
 import { submitRaffleBonusActionEndpoint } from '@/endpoints/raffles/submitBonusAction'
+import { runDueRafflesEndpoint, runDueRafflesGetEndpoint } from '@/endpoints/raffles/runDueDraws'
 
 export const Raffles: CollectionConfig = {
   slug: 'raffles',
@@ -28,6 +29,8 @@ export const Raffles: CollectionConfig = {
     initiateRafflePaymentEndpoint,
     confirmRafflePaymentEndpoint,
     submitRaffleBonusActionEndpoint,
+    runDueRafflesEndpoint,
+    runDueRafflesGetEndpoint,
   ],
   fields: [
     {
