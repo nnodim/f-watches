@@ -105,7 +105,7 @@ export const WinnerEmail = ({
                 <Section style={productListBox}>
                   {linkedProducts.map((product) => {
                     const label = product.title?.trim() || product.slug
-                    const url = `${baseURL}/shop/${product.slug}`
+                    const url = `${baseURL}/products/${product.slug}`
                     return (
                       <Section key={product.slug} style={productItem}>
                         <Link href={url} style={productLink}>
