@@ -115,7 +115,7 @@ export default async function RaffleDrawPage({ params }: Args) {
                       {productSlug ? (
                         <Link
                           className="mt-1 inline-block text-sm text-primary underline-offset-4 hover:underline"
-                          href={`/shop/${productSlug}`}
+                          href={`/products/${productSlug}`}
                         >
                           View watch
                         </Link>
