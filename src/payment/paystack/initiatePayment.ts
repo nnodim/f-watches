@@ -4,6 +4,7 @@ import { buildCartSnapshot } from '@/lib/cartSnapshot'
 import type { DiscountCodeDoc } from '@/lib/discounts'
 import type { Cart } from '@/payload-types'
 import { getNigeriaShippingFee } from '@/lib/shipping'
+import { handlePaystackSuccess } from '@/lib/utils'
 
 type Props = {
   secretKey: PaystackAdapterArgs['secretKey']
@@ -83,9 +84,68 @@ export const initiatePayment: (props: Props) => NonNullable<PaymentAdapter>['ini
       })
       const grandTotal = cartSnapshot.total + shippingFee
 
-      if (!grandTotal || grandTotal <= 0) throw new Error('Valid amount is required.')
-
       const reference = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+
+      if (grandTotal <= 0) {
+        const transaction = await payload.create({
+          collection: 'transactions',
+          data: {
+            ...(req.user ? { customer: req.user.id } : { customerEmail }),
+            amount: 0,
+            customerEmail,
+            billingAddress: billingAddressFromData,
+            cart: cart.id,
+            currency: isSupportedCurrency(currency)
+              ? (currency.toUpperCase() as 'NGN' | 'USD')
+              : null,
+            items: cartSnapshot.items,
+            paymentMethod: 'paystack',
+            status: 'pending',
+            paystack: {
+              channel: 'discount-code',
+              paidAt: new Date().toISOString(),
+              reference,
+              transactionId: reference,
+            },
+          },
+        })
+
+        const result = await handlePaystackSuccess({
+          payload,
+          transaction,
+          paystackData: {
+            amount: 0,
+            channel: 'discount-code',
+            currency: currency.toUpperCase(),
+            customer: {
+              email: customerEmail,
+            },
+            customer_code: null,
+            id: reference,
+            metadata: {
+              cartDiscountAmount: cartSnapshot.discountAmount,
+              cartGrandTotal: 0,
+              cartID: cart.id,
+              cartItemsSnapshot: JSON.stringify(cartSnapshot.items),
+              cartShippingFee: shippingFee,
+              cartTotal: cartSnapshot.total,
+              shippingAddress: JSON.stringify(shippingAddressFromData),
+            },
+            paid_at: new Date().toISOString(),
+            reference,
+            status: 'success',
+          },
+          req,
+        })
+
+        return {
+          message: 'Order completed successfully.',
+          orderID: result.orderID,
+          reference,
+          transactionID: result.transactionID,
+          zeroAmount: true,
+        }
+      }
 
       // 3. Parallel Execution: Paystack Init + Payload Transaction Creation
 

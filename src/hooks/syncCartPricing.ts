@@ -178,6 +178,8 @@ export const syncCartPricing: CollectionBeforeChangeHook = async ({
   }
 
   const total = Math.max(subtotal - discountAmount, 0)
+  console.log(total, subtotal, discountAmount);
+  
 
   cartData.subtotal = subtotal
   cartData.total = total

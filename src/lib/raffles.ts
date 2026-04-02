@@ -3,6 +3,7 @@ import type { Endpoint, Payload, PayloadRequest } from 'payload'
 import type { Raffle, RaffleEntry } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { RafflePurchaseConfirmationEmailHtml } from '@/components/emails/RafflePurchaseCofirmationEmail'
+import { WinnerEmailHtml } from '@/components/emails/WinnerEmail'
 
 type DrawWinner = {
   discountCodeID: string
@@ -61,25 +62,29 @@ const getRewardPlan = (
 const sendWinnerEmail = async (args: {
   code: string
   customerEmail: string
+  eligibleProducts: Array<{ slug?: null | string; title?: null | string }>
+  expiresAt?: null | string
   payload: Payload
   raffleTitle: string
   rewardType: 'free-watch' | 'half-off'
 }) => {
-  const { code, customerEmail, payload, raffleTitle, rewardType } = args
+  const { code, customerEmail, eligibleProducts, expiresAt, payload, raffleTitle, rewardType } =
+    args
   const rewardLabel = rewardType === 'free-watch' ? 'a free watch' : '50% off a watch'
+
+  const html = await WinnerEmailHtml({
+    code,
+    customerEmail,
+    eligibleProducts,
+    expiresAt,
+    raffleTitle,
+    rewardType,
+  })
 
   await payload.sendEmail({
     to: customerEmail,
     subject: `You won ${rewardLabel} in ${raffleTitle}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Congratulations</h2>
-        <p>You were selected as a winner in <strong>${raffleTitle}</strong>.</p>
-        <p>Your reward: <strong>${rewardLabel}</strong>.</p>
-        <p>Your one-time code is <strong>${code}</strong>.</p>
-        <p>Apply the code at checkout on an eligible watch product.</p>
-      </div>
-    `,
+    html,
   })
 }
 
@@ -92,8 +97,15 @@ export const sendRafflePurchaseConfirmationEmail = async (args: {
   ticketNumbers: string[]
   raffleTitle: string
 }) => {
-  const { confirmationToken, customerEmail, payload, quantity, raffleSlug, ticketNumbers, raffleTitle } =
-    args
+  const {
+    confirmationToken,
+    customerEmail,
+    payload,
+    quantity,
+    raffleSlug,
+    ticketNumbers,
+    raffleTitle,
+  } = args
 
   const html = await RafflePurchaseConfirmationEmailHtml({
     confirmationToken,
@@ -132,7 +144,9 @@ export const getTicketNumbersByPurchase = async (args: {
     },
   })
 
-  return entries.docs.map((entry) => entry.ticketNumber).filter((value): value is string => Boolean(value))
+  return entries.docs
+    .map((entry) => entry.ticketNumber)
+    .filter((value): value is string => Boolean(value))
 }
 
 export const createEntriesForPurchase = async (args: {
@@ -240,6 +254,19 @@ export const drawRaffle = async (args: {
   const eligibleProductIDs = (raffle.eligibleProducts || [])
     .map((product) => toID(product))
     .filter((value): value is string => Boolean(value))
+  const eligibleProducts = (raffle.eligibleProducts || []).map((product) => {
+    if (typeof product === 'object' && product) {
+      return {
+        slug: 'slug' in product && typeof product.slug === 'string' ? product.slug : null,
+        title: 'title' in product && typeof product.title === 'string' ? product.title : null,
+      }
+    }
+
+    return {
+      slug: null,
+      title: null,
+    }
+  })
 
   if (eligibleProductIDs.length === 0) {
     throw new Error('Add at least one eligible prize product before drawing the raffle.')
@@ -249,7 +276,7 @@ export const drawRaffle = async (args: {
     collection: 'raffle-entries',
     depth: 0,
     limit: 5000,
-    overrideAccess: false,
+    overrideAccess: true,
     pagination: false,
     req,
     where: {
@@ -326,10 +353,13 @@ export const drawRaffle = async (args: {
   }
 
   const customerEmail = toEmail(winnerEntry.customerEmail)
+
   if (customerEmail) {
     await sendWinnerEmail({
       code: discountCodeValue,
       customerEmail,
+      eligibleProducts,
+      expiresAt: raffle.rewardCodeExpiresAt,
       payload,
       raffleTitle: raffle.title,
       rewardType: plan.rewardType,
@@ -359,13 +389,14 @@ export const drawRaffle = async (args: {
 }
 
 export const runDueRaffles = async (args: { payload: Payload; req: PayloadRequest }) => {
+  console.log('Running due raffles...')
   const { payload, req } = args
   const now = new Date().toISOString()
   const dueRaffles = await payload.find({
     collection: 'raffles',
     depth: 0,
     limit: 100,
-    overrideAccess: false,
+    overrideAccess: true,
     pagination: false,
     req,
     where: {
@@ -397,6 +428,8 @@ export const runDueRaffles = async (args: { payload: Payload; req: PayloadReques
         raffleID: raffle.id,
         req,
       })
+
+      console.log(winners)
 
       results.push({
         raffleID: raffle.id,

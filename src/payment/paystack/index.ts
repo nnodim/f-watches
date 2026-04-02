@@ -129,8 +129,11 @@ export const paystackAdapterClient: (
 }
 
 export type InitiatePaymentReturnType = {
-  accessCode: string
-  authorizationUrl: string
   message: string
   reference: string
+  accessCode?: string
+  authorizationUrl?: string
+  orderID?: string
+  transactionID?: string
+  zeroAmount?: boolean
 }
