@@ -35,6 +35,7 @@ export default async function RaffleDrawPage({ params }: Args) {
   const winnerEntryID =
     raffle.winnerEntry && typeof raffle.winnerEntry === 'object' ? raffle.winnerEntry.id : null
   const winnerEntry = winnerEntryID ? entries.find((entry) => entry.id === winnerEntryID) : null
+  const winnerIdentity = winnerEntry ? await queryWinnerIdentity(winnerEntry.id) : null
 
   return (
     <div className="container py-12">
@@ -151,6 +152,17 @@ export default async function RaffleDrawPage({ params }: Args) {
                       .join(', ') || 'the eligible raffle watch selection'}
                     .
                   </p>
+                  {winnerIdentity?.customerEmail ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Winner email: <span className="font-medium text-foreground">{winnerIdentity.customerEmail}</span>
+                    </p>
+                  ) : null}
+                  {winnerIdentity?.socialHandle ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Winner username:{' '}
+                      <span className="font-medium text-foreground">{winnerIdentity.socialHandle}</span>
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 <div className="mt-4 rounded-2xl border p-5">
@@ -250,4 +262,55 @@ const raffleEntriesForRaffle = async (raffleID: string) => {
   })
 
   return result.docs
+}
+
+const queryWinnerIdentity = async (entryID: string) => {
+  const payload = await getPayload({ config: configPromise })
+  const entry = await payload.findByID({
+    collection: 'raffle-entries',
+    id: entryID,
+    depth: 0,
+    overrideAccess: true,
+    select: {
+      customerEmail: true,
+      purchase: true,
+    },
+  })
+
+  const purchaseID =
+    entry.purchase && typeof entry.purchase === 'object' ? entry.purchase.id : entry.purchase
+
+  let socialHandle: null | string = null
+
+  if (purchaseID) {
+    const bonusActions = await payload.find({
+      collection: 'raffle-bonus-actions',
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      pagination: false,
+      sort: '-updatedAt',
+      where: {
+        and: [
+          {
+            purchase: {
+              equals: purchaseID,
+            },
+          },
+          {
+            socialHandle: {
+              exists: true,
+            },
+          },
+        ],
+      },
+    })
+
+    socialHandle = bonusActions.docs[0]?.socialHandle || null
+  }
+
+  return {
+    customerEmail: entry.customerEmail || null,
+    socialHandle,
+  }
 }

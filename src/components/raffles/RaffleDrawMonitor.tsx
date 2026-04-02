@@ -99,12 +99,12 @@ export function RaffleDrawMonitor({ drawDate, isDrawn }: Props) {
           <p className="text-sm uppercase tracking-[0.25em] text-primary/60">Live Draw Monitor</p>
           <h2 className="text-2xl font-semibold">{statusLabel}</h2>
           <p className="text-sm text-muted-foreground">
-            This page refreshes automatically around draw time so viewers can see when the winner
-            is selected.
+            This page refreshes automatically around draw time so viewers can see when the winner is
+            selected.
           </p>
         </div>
 
-        {isAdmin && (
+        {isAdmin ? (
           <div className="flex flex-col items-start gap-2">
             <Button disabled={isRunningCron} onClick={runScheduledDrawCheck} variant="outline">
               {isRunningCron ? 'Running draw check...' : 'Run Scheduled Draw Check'}
@@ -113,7 +113,7 @@ export function RaffleDrawMonitor({ drawDate, isDrawn }: Props) {
               Admin test control for the same endpoint the cron job calls.
             </p>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
