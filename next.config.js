@@ -6,6 +6,19 @@ const NEXT_PUBLIC_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://loc
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://us-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://us.i.posthog.com/:path*',
+      },
+    ]
+  },
+  skipTrailingSlashRedirect: true,
   images: {
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL, 'https://res.cloudinary.com'].map((item) => {

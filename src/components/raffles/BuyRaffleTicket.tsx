@@ -7,6 +7,7 @@ import { useAuth } from '@/providers/Auth'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import posthog from 'posthog-js'
 
 export function BuyRaffleTicket(props: {
   drawDate: string
@@ -31,6 +32,13 @@ export function BuyRaffleTicket(props: {
     }
 
     setIsLoading(true)
+
+    posthog.capture('raffle_ticket_purchase_started', {
+      raffle_id: raffleID,
+      raffle_title: title,
+      quantity,
+      total_price: ticketPrice * quantity,
+    })
 
     try {
       const response = await fetch(`/api/raffles/${raffleID}/initiate-payment`, {
@@ -72,6 +80,13 @@ export function BuyRaffleTicket(props: {
               throw new Error(confirmData?.message || 'Unable to confirm payment.')
             }
 
+            posthog.capture('raffle_ticket_purchased', {
+              raffle_id: raffleID,
+              raffle_title: title,
+              quantity,
+              total_price: ticketPrice * quantity,
+              payment_reference: tranx.reference,
+            })
             toast.success(`You have successfully entered ${title}.`)
             if (
               confirmData?.raffleSlug &&
@@ -90,6 +105,10 @@ export function BuyRaffleTicket(props: {
           }
         },
         onCancel() {
+          posthog.capture('raffle_ticket_purchase_cancelled', {
+            raffle_id: raffleID,
+            raffle_title: title,
+          })
           setIsLoading(false)
           toast.info('Payment was cancelled.')
         },

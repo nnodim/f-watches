@@ -8,6 +8,7 @@ import clsx from 'clsx'
 import { useSearchParams } from 'next/navigation'
 import React, { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
+import posthog from 'posthog-js'
 type Props = {
   product: Product
 }
@@ -46,6 +47,12 @@ export function AddToCart({ product }: Props) {
         variant: selectedVariant?.id ?? undefined,
       }).then(() => {
         toast.success('Item added to cart.')
+        posthog.capture('product_added_to_cart', {
+          product_id: product.id,
+          product_name: product.title,
+          variant_id: selectedVariant?.id,
+          variant_title: selectedVariant?.title,
+        })
       })
     },
     [addItem, product, selectedVariant],

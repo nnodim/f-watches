@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import posthog from 'posthog-js'
 
 type FormData = {
   email: string
@@ -57,6 +58,7 @@ export const CreateAccountForm: React.FC = () => {
           return
         }
 
+        posthog.capture('user_signed_up', { email: data.email })
         router.push(`/check-email?email=${encodeURIComponent(data.email)}`)
       } catch {
         clearTimeout(loader)

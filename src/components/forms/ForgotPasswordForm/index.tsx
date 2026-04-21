@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import React, { Fragment, useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import posthog from 'posthog-js'
 
 type FormData = {
   email: string
@@ -39,6 +40,7 @@ export const ForgotPasswordForm: React.FC = () => {
     )
 
     if (response.ok) {
+      posthog.capture('password_reset_requested', { email: data.email })
       setSuccess(true)
       setError('')
     } else {

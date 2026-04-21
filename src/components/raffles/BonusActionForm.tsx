@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { socialCampaignConfig } from '@/lib/instagram'
+import posthog from 'posthog-js'
 
 type BonusAction = {
   actionType: string
@@ -102,6 +103,11 @@ export function BonusActionForm(props: { existingActions: BonusAction[]; purchas
         throw new Error(data?.message || 'Unable to update bonus activities.')
       }
 
+      posthog.capture('raffle_bonus_action_submitted', {
+        purchase_id: purchaseID,
+        selected_actions: selectedActions,
+        action_count: selectedActions.length,
+      })
       router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to update bonus activities.')
