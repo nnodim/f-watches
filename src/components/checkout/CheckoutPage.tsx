@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner'
 import { getEffectivePrice } from '@/lib/pricing'
 import { getNigeriaShippingFee } from '@/lib/shipping'
+import posthog from 'posthog-js'
 
 export const CheckoutPage: React.FC = () => {
   const { user } = useAuth()
@@ -102,6 +103,7 @@ export const CheckoutPage: React.FC = () => {
         toast.error(data.message)
       } else {
         await refreshCart()
+        posthog.capture('discount_code_applied', { discount_code: discountCode })
         toast.success('Discount code applied.')
       }
     } catch (err) {
@@ -142,6 +144,13 @@ export const CheckoutPage: React.FC = () => {
 
     setIsProcessingPayment(true)
     setError(null)
+
+    posthog.capture('checkout_payment_initiated', {
+      cart_id: cart?.id,
+      total: grandTotal,
+      currency: currency.code,
+      item_count: cart?.items?.length,
+    })
 
     try {
       const cartSecret = typeof window !== 'undefined' ? localStorage.getItem('cart_secret') : null
@@ -197,6 +206,12 @@ export const CheckoutPage: React.FC = () => {
                 'orderID' in confirmResult &&
                 confirmResult.orderID
               ) {
+                posthog.capture('order_completed', {
+                  order_id: confirmResult.orderID,
+                  total: grandTotal,
+                  currency: currency.code,
+                  payment_method: 'paystack',
+                })
                 const redirectUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/orders/${confirmResult.orderID}${customerEmail ? `?email=${customerEmail}` : ''}`
                 clearCart()
                 toast.success('Payment successful! Redirecting to your order...')
@@ -213,6 +228,10 @@ export const CheckoutPage: React.FC = () => {
             }
           },
           onCancel() {
+            posthog.capture('checkout_payment_cancelled', {
+              cart_id: cart?.id,
+              currency: currency.code,
+            })
             setIsProcessingPayment(false)
             toast.info('Payment was cancelled')
           },
@@ -238,10 +257,13 @@ export const CheckoutPage: React.FC = () => {
     billingAddress,
     customerEmail,
     cart?.id,
+    cart?.items?.length,
     resolvedShippingAddress,
     confirmOrder,
     clearCart,
     router,
+    grandTotal,
+    currency.code,
   ])
 
   if (isLoading) {

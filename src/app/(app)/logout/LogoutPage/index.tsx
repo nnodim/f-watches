@@ -4,6 +4,7 @@ import { useAuth } from '@/providers/Auth'
 import { useEcommerce } from '@payloadcms/plugin-ecommerce/client/react'
 import Link from 'next/link'
 import React, { Fragment, useEffect, useRef, useState } from 'react'
+import posthog from 'posthog-js'
 
 export const LogoutPage: React.FC = (props) => {
   const { logout } = useAuth()
@@ -19,6 +20,8 @@ export const LogoutPage: React.FC = (props) => {
 
     const performLogout = async () => {
       try {
+        posthog.capture('user_logged_out')
+        posthog.reset()
         await logout()
         onLogout()
         setSuccess('Logged out successfully.')
