@@ -13,6 +13,7 @@ export const RafflePurchases: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
+    hidden: true,
     defaultColumns: ['raffle', 'customerEmail', 'quantity', 'amount', 'status', 'createdAt'],
     group: 'Ecommerce',
     useAsTitle: 'paymentReference',

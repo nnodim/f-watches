@@ -61,6 +61,7 @@ export const RaffleBonusActions: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
+    hidden: true,
     defaultColumns: ['actionType', 'customerEmail', 'status', 'bonusEntryCount', 'createdAt'],
     group: 'Ecommerce',
     useAsTitle: 'actionType',
