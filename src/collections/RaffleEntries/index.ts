@@ -12,6 +12,7 @@ export const RaffleEntries: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
+    hidden: true,
     defaultColumns: ['ticketNumber', 'raffle', 'customerEmail', 'status', 'rewardType', 'createdAt'],
     group: 'Ecommerce',
     useAsTitle: 'ticketNumber',

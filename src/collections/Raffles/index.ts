@@ -20,6 +20,7 @@ export const Raffles: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
+    hidden: true,
     defaultColumns: ['title', 'status', 'ticketPrice', 'maxTickets', 'drawDate'],
     group: 'Ecommerce',
     useAsTitle: 'title',
