@@ -194,7 +194,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
         collection: 'debt-payments',
         on: 'order',
         admin: {
-          allowCreate: false,
+          allowCreate: true,
           defaultColumns: ['reference', 'amount', 'currency', 'paidAt', 'paymentMethod'],
         },
       },

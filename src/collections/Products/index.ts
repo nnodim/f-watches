@@ -275,6 +275,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         position: 'sidebar',
         sortOptions: 'title',
       },
+      required: true,
       hasMany: true,
       relationTo: 'categories',
     },

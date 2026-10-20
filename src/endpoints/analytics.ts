@@ -282,9 +282,11 @@ export const analyticsEndpoint: Endpoint = {
           where: { id: { in: Array.from(productIds) } },
           limit: productIds.size,
           pagination: false,
-          depth: 0,
+          depth: 1,
           select: {
             title: true,
+            gallery: true,
+            meta: true,
             priceInNGN: true,
             priceInUSD: true,
             costPriceInNGN: true,
@@ -319,6 +321,7 @@ export const analyticsEndpoint: Endpoint = {
         {
           id: string
           name: string
+          imageUrl: string | null
           sales: number
           revenue: number
           cost: number
@@ -350,6 +353,14 @@ export const analyticsEndpoint: Endpoint = {
           order.items.forEach((item: any) => {
             const productId = typeof item.product === 'object' ? item.product?.id : item.product
             const product = productId ? productsMap.get(productId) : undefined
+            const galleryImage = product?.gallery?.find(
+              (entry) => typeof entry.image === 'object' && entry.image !== null,
+            )?.image
+            const metaImage = product?.meta?.image
+            const imageUrl =
+              (typeof galleryImage === 'object' ? galleryImage.url : null) ||
+              (typeof metaImage === 'object' && metaImage !== null ? metaImage.url : null) ||
+              null
             const qty = item.quantity || 1
             const { unitPrice, unitCost } = getItemUnitAmounts(item, product, orderCurrency)
             const itemRevenue = unitPrice * qty
@@ -363,6 +374,7 @@ export const analyticsEndpoint: Endpoint = {
               productMetrics.set(key, {
                 id: product?.id || 'unknown',
                 name: product?.title || 'Unknown',
+                imageUrl,
                 sales: 0,
                 revenue: 0,
                 cost: 0,
@@ -575,6 +587,7 @@ export const analyticsEndpoint: Endpoint = {
         .map((product) => ({
           id: product.id,
           name: product.name,
+          imageUrl: product.imageUrl,
           sales: product.sales,
           revenue: product.revenue,
           profit: product.profit,
@@ -587,6 +600,7 @@ export const analyticsEndpoint: Endpoint = {
         .map((product) => ({
           id: product.id,
           name: product.name,
+          imageUrl: product.imageUrl,
           quantitySold: product.sales,
           ordersCount: product.orderIDs.size,
           revenue: product.revenue,

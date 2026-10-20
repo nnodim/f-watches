@@ -10,9 +10,7 @@ import {
   Carousel,
   CarouselApi,
   CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  CarouselItem
 } from '@/components/ui/carousel'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
 
