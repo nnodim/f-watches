@@ -40,6 +40,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import Image from 'next/image'
 import { DashboardSkeleton } from '../DashboardSkeleton'
 
 const COLORS = ['#17594a', '#d97706', '#b91c1c', '#1d4ed8', '#6d28d9', '#0f766e']
@@ -253,6 +254,21 @@ const styles = {
     letterSpacing: '0.06em',
   },
   td: { padding: '14px', fontSize: '13px', color: '#0f172a', borderBottom: '1px solid #edf2f7' },
+  productIdentity: { display: 'flex', alignItems: 'center', gap: '12px' },
+  productImage: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '8px',
+    objectFit: 'cover' as const,
+    backgroundColor: '#f1f5f9',
+  },
+  productImagePlaceholder: {
+    width: '44px',
+    height: '44px',
+    flexShrink: 0,
+    borderRadius: '8px',
+    backgroundColor: '#f1f5f9',
+  },
   badge: {
     display: 'inline-block',
     padding: '5px 10px',
@@ -411,6 +427,27 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
   <div style={styles.empty}>{message}</div>
 )
 
+const ProductCell: React.FC<{ id: string; name: string; imageUrl?: null | string }> = ({
+  id,
+  name,
+  imageUrl,
+}) => (
+  <td style={{ ...styles.td, fontWeight: 600 }}>
+    <div style={styles.productIdentity}>
+      {imageUrl ? (
+        <Image src={imageUrl} alt="" width={44} height={44} unoptimized style={styles.productImage} />
+      ) : (
+        <div aria-hidden="true" style={styles.productImagePlaceholder} />
+      )}
+      {id !== 'unknown' ? (
+        <Link href={`/admin/collections/products/${id}`}>{name}</Link>
+      ) : (
+        name
+      )}
+    </div>
+  </td>
+)
+
 const defaultAnalytics: AnalyticsData = {
   overview: {
     totalRevenue: 0,
@@ -539,9 +576,7 @@ export const AnalyticsClient: React.FC = () => {
         <tbody>
           {products.map((product) => (
             <tr key={product.id}>
-              <td style={{ ...styles.td, fontWeight: 600 }}>
-                <Link href={`/admin/collections/products/${product.id}`}>{product.name}</Link>
-              </td>
+              <ProductCell id={product.id} name={product.name} imageUrl={product.imageUrl} />
               <td style={styles.td}>{product.sales}</td>
               <td style={styles.td}>{formatCurrency(product.revenue)}</td>
               <td style={product.profit >= 0 ? styles.profitPositive : styles.profitNegative}>
@@ -743,7 +778,7 @@ export const AnalyticsClient: React.FC = () => {
           value={formatCurrency(analytics.overview.totalOutstandingDebt)}
           icon={CreditCard}
           color="#b45309"
-          href="/admin/collections/orders"
+          href="/admin/collections/debt-payments"
           hint="Review debt-carrying orders"
         />
         <StatCard
@@ -1385,13 +1420,7 @@ export const AnalyticsClient: React.FC = () => {
                   <tbody>
                     {(drilldownRows as SoldItemSummary[]).map((item) => (
                       <tr key={item.id}>
-                        <td style={{ ...styles.td, fontWeight: 600 }}>
-                          {item.id !== 'unknown' ? (
-                            <Link href={`/admin/collections/products/${item.id}`}>{item.name}</Link>
-                          ) : (
-                            item.name
-                          )}
-                        </td>
+                        <ProductCell id={item.id} name={item.name} imageUrl={item.imageUrl} />
                         <td style={styles.td}>{item.quantitySold}</td>
                         <td style={styles.td}>{item.ordersCount}</td>
                         <td style={styles.td}>{formatCurrency(item.revenue)}</td>

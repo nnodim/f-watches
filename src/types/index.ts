@@ -49,6 +49,7 @@ export type OrderStatusData = {
 export interface TopProduct {
   id: string
   name: string
+  imageUrl?: string | null
   sales: number
   revenue: number
   profit: number
@@ -58,6 +59,7 @@ export interface TopProduct {
 export interface SoldItemSummary {
   id: string
   name: string
+  imageUrl?: string | null
   quantitySold: number
   ordersCount: number
   revenue: number

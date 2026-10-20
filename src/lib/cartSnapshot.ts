@@ -33,6 +33,7 @@ const getVariantId = (variant?: (string | null) | Variant) => {
   return typeof variant === 'object' ? variant.id : variant
 }
 
+
 const getProductCostPrice = (product: Product | null, currency: string) => {
   if (!product) return 0
   const key = `costPriceIn${currency}` as keyof Product

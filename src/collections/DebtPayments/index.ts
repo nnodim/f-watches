@@ -50,7 +50,9 @@ export const DebtPayments: CollectionConfig = {
           ...data,
           currency: order.currency,
           customer:
-            order.customer && typeof order.customer === 'object' ? order.customer.id : order.customer,
+            order.customer && typeof order.customer === 'object'
+              ? order.customer.id
+              : order.customer,
           customerEmail: order.customerEmail,
           recordedBy: req.user?.id,
         }
@@ -89,6 +91,20 @@ export const DebtPayments: CollectionConfig = {
       relationTo: 'orders',
       required: true,
       index: true,
+      admin: {
+        appearance: 'drawer',
+      },
+      filterOptions: {
+        and: [
+          { debtTrackingEnabled: { equals: true } },
+          {
+            or: [
+              { debtStatus: { in: ['unpaid', 'partial', 'overdue'] } },
+              { amountOutstanding: { greater_than: 0 } },
+            ],
+          },
+        ],
+      },
     },
     {
       name: 'customer',

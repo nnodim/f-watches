@@ -1,9 +1,8 @@
 import type { SortFilterItem } from '@/lib/constants'
 
-import React, { Suspense } from 'react'
-import { FilterItemDropdown } from './FilterItemDropdown'
-import { FilterItem } from './FilterItem'
 import { AccordionContent, AccordionTrigger } from '@/components/ui/accordion'
+import React, { Suspense } from 'react'
+import { FilterItem } from './FilterItem'
 
 export type ListItem = PathFilterItem | SortFilterItem
 export type PathFilterItem = { path: string; title: string }

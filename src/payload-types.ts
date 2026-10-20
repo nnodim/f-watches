@@ -408,7 +408,7 @@ export interface Product {
     image?: (string | null) | Media;
     description?: string | null;
   };
-  categories?: (string | Category)[] | null;
+  categories: (string | Category)[];
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
