@@ -8,3 +8,29 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+.relationship-table__actions {
+  .relationship-table__add-new.btn {
+    background: var(--theme-elevation-800);
+    color: var(--theme-elevation-0);
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+      background: var(--theme-elevation-800);
+    }
+
+    .btn__label {
+      font-weight: 600;
+    }
+
+    // Adds a "+" before the label
+    .btn__label::before {
+      content: '+';
+      margin-right: 6px;
+      font-size: 1.1em;
+    }
+  }
+}

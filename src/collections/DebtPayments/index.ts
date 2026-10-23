@@ -85,19 +85,21 @@ export const DebtPayments: CollectionConfig = {
       unique: true,
       defaultValue: () => `debt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       required: true,
+      admin: {
+        readOnly: true,
+        hidden: true,
+      },
     },
     {
       name: 'order',
       type: 'relationship',
       relationTo: 'orders',
-      access: {
-        create: () => false,
-        update: () => false,
-      },
       required: true,
       index: true,
       admin: {
         appearance: 'drawer',
+        readOnly: true,
+        hidden: true,
       },
       filterOptions: {
         and: [
@@ -111,6 +113,15 @@ export const DebtPayments: CollectionConfig = {
         ],
       },
     },
+    amountField({
+      currenciesConfig,
+      overrides: {
+        name: 'amount',
+        label: 'Amount Paid',
+        required: true,
+        min: 0,
+      },
+    }),
     {
       name: 'customer',
       type: 'relationship',
@@ -126,15 +137,6 @@ export const DebtPayments: CollectionConfig = {
         readOnly: true,
       },
     },
-    amountField({
-      currenciesConfig,
-      overrides: {
-        name: 'amount',
-        label: 'Amount Paid',
-        required: true,
-        min: 0,
-      },
-    }),
     {
       name: 'currency',
       type: 'select',
@@ -144,6 +146,7 @@ export const DebtPayments: CollectionConfig = {
       })),
       admin: {
         readOnly: true,
+        hidden: true,
       },
     },
     {
@@ -152,6 +155,7 @@ export const DebtPayments: CollectionConfig = {
       defaultValue: () => new Date().toISOString(),
       required: true,
       admin: {
+        
         date: {
           pickerAppearance: 'dayAndTime',
         },

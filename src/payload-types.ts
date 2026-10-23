@@ -1176,9 +1176,9 @@ export interface DebtPayment {
   id: string;
   reference: string;
   order: string | Order;
+  amount: number;
   customer?: (string | null) | User;
   customerEmail?: string | null;
-  amount: number;
   currency?: ('NGN' | 'USD') | null;
   paidAt: string;
   paymentMethod: 'bank-transfer' | 'cash' | 'card' | 'pos' | 'mobile-transfer' | 'adjustment' | 'other';
@@ -1807,9 +1807,9 @@ export interface DiscountCodesSelect<T extends boolean = true> {
 export interface DebtPaymentsSelect<T extends boolean = true> {
   reference?: T;
   order?: T;
+  amount?: T;
   customer?: T;
   customerEmail?: T;
-  amount?: T;
   currency?: T;
   paidAt?: T;
   paymentMethod?: T;
