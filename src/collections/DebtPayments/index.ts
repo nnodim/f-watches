@@ -7,9 +7,10 @@ import type { CollectionConfig } from 'payload'
 export const DebtPayments: CollectionConfig = {
   slug: 'debt-payments',
   admin: {
+    hidden: true,
     group: 'Ecommerce',
-    useAsTitle: 'reference',
-    defaultColumns: ['reference', 'order', 'amount', 'currency', 'paidAt', 'paymentMethod'],
+    useAsTitle: 'paidAt',
+    defaultColumns: ['amount', 'customerEmail', 'order', 'paidAt'],
   },
   access: {
     create: adminOnly,
@@ -89,6 +90,10 @@ export const DebtPayments: CollectionConfig = {
       name: 'order',
       type: 'relationship',
       relationTo: 'orders',
+      access: {
+        create: () => false,
+        update: () => false,
+      },
       required: true,
       index: true,
       admin: {

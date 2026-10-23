@@ -778,7 +778,12 @@ export const AnalyticsClient: React.FC = () => {
           value={formatCurrency(analytics.overview.totalOutstandingDebt)}
           icon={CreditCard}
           color="#b45309"
-          href="/admin/collections/debt-payments"
+          href={
+            '/admin/collections/orders' +
+            '?where[and][0][debtTrackingEnabled][equals]=true' +
+            '&where[and][1][amountOutstanding][greater_than]=0' +
+            '&sort=-amountOutstanding'
+          }
           hint="Review debt-carrying orders"
         />
         <StatCard
@@ -1049,15 +1054,20 @@ export const AnalyticsClient: React.FC = () => {
           comparisonLabel={comparisonLabel}
           icon={Wallet}
           color="#0f766e"
-          href="/admin/collections/debt-payments"
-          hint="Open debt payments"
+          // href="/admin/collections/debt-payments"
+          // hint="Open debt payments"
         />
         <StatCard
           title="Outstanding Debt"
           value={formatCurrency(analytics.overview.totalOutstandingDebt)}
           icon={CreditCard}
           color="#b45309"
-          href="/admin/collections/orders"
+          href={
+            '/admin/collections/orders' +
+            '?where[and][0][debtTrackingEnabled][equals]=true' +
+            '&where[and][1][amountOutstanding][greater_than]=0' +
+            '&sort=-amountOutstanding'
+          }
           hint="Review debt orders"
         />
         <StatCard

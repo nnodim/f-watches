@@ -102,6 +102,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
       {
         name: 'debtTrackingEnabled',
         type: 'checkbox',
+        label: 'Debt Order',
         defaultValue: false,
         admin: {
           position: 'sidebar',
@@ -195,7 +196,18 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
         on: 'order',
         admin: {
           allowCreate: true,
-          defaultColumns: ['reference', 'amount', 'currency', 'paidAt', 'paymentMethod'],
+          condition: (data) => Boolean(data?.debtTrackingEnabled),
+          defaultColumns: ['paidAt', 'amount'],
+        },
+      },
+      {
+        name: 'itemsPreview',
+        type: 'ui',
+        label: 'Items',
+        admin: {
+          components: {
+            Cell: '@/components/ItemsPreviewCell#ItemsPreviewCell',
+          },
         },
       },
     ],
