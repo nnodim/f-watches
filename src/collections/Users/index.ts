@@ -12,6 +12,7 @@ import { addVerificationToken } from './hooks/addVerificationToken'
 import { sendVerificationEmail } from './hooks/sendVerificationEmail'
 import { verificationBeforeLogin } from './hooks/verificationBeforeLogin'
 import { ForgotPasswordEmailHtml } from '@/components/emails/ForgotPasswordEmail'
+import { getServerSideURL } from '@/utilities/getURL'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -41,9 +42,27 @@ export const Users: CollectionConfig = {
         if (!args) {
           throw new Error('Invalid arguments')
         }
+        if (!args.token) {
+          throw new Error('Missing password reset token')
+        }
+        let resetURL: string
+        if (args.user.roles?.includes('admin')) {
+          const config = args.req?.payload.config
+          if (!config) throw new Error('Payload request context is required for admin reset URL')
+          resetURL = new URL(
+            `${config.routes.admin}${config.admin.routes.reset}/${encodeURIComponent(args.token)}`,
+            getServerSideURL(),
+          ).toString()
+        } else {
+          resetURL = new URL(
+            `/reset-password?token=${encodeURIComponent(args.token)}`,
+            getServerSideURL(),
+          ).toString()
+        }
+
         const html = await ForgotPasswordEmailHtml({
-          token: args.token as string,
           userEmail: args.user.email,
+          resetURL,
         })
         return html
       },

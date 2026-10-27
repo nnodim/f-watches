@@ -12,6 +12,7 @@ import { GeistSans } from 'geist/font/sans'
 import { Instrument_Sans, Montserrat, EB_Garamond, Roboto } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { headers } from 'next/headers'
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -66,6 +67,7 @@ const ebGaramond = EB_Garamond({
 })
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
+  await headers()
   return (
     <html
       className={[
