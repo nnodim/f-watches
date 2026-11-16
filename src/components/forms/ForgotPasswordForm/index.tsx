@@ -6,10 +6,9 @@ import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import Link from 'next/link'
+import posthog from 'posthog-js'
 import React, { Fragment, useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import posthog from 'posthog-js'
 
 type FormData = {
   email: string
