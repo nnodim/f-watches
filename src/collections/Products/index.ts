@@ -23,12 +23,25 @@ import { costPricesField } from '@/components/Fields/costPricesField'
 import { currenciesConfig } from '@/lib/constants'
 import { amountField } from '@payloadcms/plugin-ecommerce'
 import { syncSaleFlags } from '@/hooks/syncSaleFlags'
+import { revalidatePath } from 'next/cache'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   hooks: {
     ...(defaultCollection.hooks || {}),
     beforeChange: [...(defaultCollection.hooks?.beforeChange || []), syncSaleFlags],
+    afterChange: [
+      ...(defaultCollection.hooks?.afterChange || []),
+      ({ req: { context } }) => {
+        if (!context.disableRevalidate) revalidatePath('/')
+      },
+    ],
+    afterDelete: [
+      ...(defaultCollection.hooks?.afterDelete || []),
+      ({ req: { context } }) => {
+        if (!context.disableRevalidate) revalidatePath('/')
+      },
+    ],
   },
   admin: {
     ...defaultCollection?.admin,
