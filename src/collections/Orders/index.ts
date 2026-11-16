@@ -79,6 +79,7 @@ export const OrdersCollection: CollectionOverride = ({ defaultCollection }) => {
         'debtStatus',
         'amountOutstanding',
         'createdAt',
+        'itemsPreview',
       ],
     },
     hooks: {
