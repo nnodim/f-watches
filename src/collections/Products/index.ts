@@ -1,8 +1,11 @@
 import { CallToAction } from '@/blocks/CallToAction/config'
 import { Content } from '@/blocks/Content/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
-import { slugField } from 'payload'
+import { costPricesField } from '@/components/Fields/costPricesField'
+import { syncSaleFlags } from '@/hooks/syncSaleFlags'
+import { currenciesConfig } from '@/lib/constants'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
+import { amountField } from '@payloadcms/plugin-ecommerce'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import {
   MetaDescriptionField,
@@ -18,12 +21,8 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import { DefaultDocumentIDType, Where } from 'payload'
-import { costPricesField } from '@/components/Fields/costPricesField'
-import { currenciesConfig } from '@/lib/constants'
-import { amountField } from '@payloadcms/plugin-ecommerce'
-import { syncSaleFlags } from '@/hooks/syncSaleFlags'
 import { revalidatePath } from 'next/cache'
+import { DefaultDocumentIDType, slugField, Where } from 'payload'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -32,14 +31,14 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     beforeChange: [...(defaultCollection.hooks?.beforeChange || []), syncSaleFlags],
     afterChange: [
       ...(defaultCollection.hooks?.afterChange || []),
-      ({ req: { context } }) => {
-        if (!context.disableRevalidate) revalidatePath('/')
+      ({ doc, req: { context } }) => {
+        if (doc._status === 'published' && !context.disableRevalidate) revalidatePath('/')
       },
     ],
     afterDelete: [
       ...(defaultCollection.hooks?.afterDelete || []),
-      ({ req: { context } }) => {
-        if (!context.disableRevalidate) revalidatePath('/')
+      ({ doc, req: { context } }) => {
+        if (doc._status === 'published' && !context.disableRevalidate) revalidatePath('/')
       },
     ],
   },
