@@ -1,21 +1,20 @@
 import type { ArchiveBlock as ArchiveBlockProps, Post, Product } from '@/payload-types'
 
 import { CollectionArchive } from '@/components/CollectionArchive'
+import { FeaturedProductsCarousel } from '@/components/featured-carousel'
 import { Grid } from '@/components/Grid'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggerGroup } from '@/components/motion/StaggerGroup'
 import { ProductGridItem } from '@/components/ProductGridItem'
+import { RichText } from '@/components/RichText'
 import { Button } from '@/components/ui/button'
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  CarouselItem
 } from '@/components/ui/carousel'
 import configPromise from '@payload-config'
 import Link from 'next/link'
 import { getPayload, Where } from 'payload'
 import React from 'react'
-import { RichText } from '@/components/RichText'
 
 export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async (props) => {
   const {
@@ -95,43 +94,48 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
     <div className="my-16" id={`block-${id}`}>
       {introContent && (
         <div className="container mb-16 flex items-center justify-between">
-          <RichText className="ms-0 max-w-3xl" data={introContent} enableGutter={false} />
+          <Reveal>
+            <RichText className="ms-0 max-w-3xl" data={introContent} enableGutter={false} />
+          </Reveal>
           {viewMoreLink && (
-            <Link href={viewMoreLink}>
-              <Button variant="ghost" className="mb-4">
-                View more
-              </Button>
-            </Link>
+            <Reveal delay={0.15}>
+              <Link href={viewMoreLink}>
+                <Button variant="ghost" className="mb-4">
+                  View more
+                </Button>
+              </Link>
+            </Reveal>
           )}
         </div>
       )}
 
       {relationTo === 'products' ? (
         filterType === 'featured' ? (
-          <div className="container">
-            <Carousel opts={{ align: 'start' }} className="w-full">
-              <CarouselContent>
-                {(docs as Product[]).map((product) => (
-                  <CarouselItem key={product.id} className="sm:basis-1/3 lg:basis-1/4">
-                    <div className="p-1">
-                      <ProductGridItem product={product} />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="-left-1 md:-left-12" />
-              <CarouselNext className="-right-1 md:-right-12" />
-            </Carousel>
-          </div>
+          <Reveal className="">
+            <FeaturedProductsCarousel>
+              {(docs as Product[]).map((product) => (
+                <CarouselItem key={product.id} className="pl-0 sm:basis-1/3 lg:basis-1/4">
+                  <div>
+                    <ProductGridItem product={product} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </FeaturedProductsCarousel>
+          </Reveal>
         ) : (
-          <Grid className="container grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {(docs as Product[]).map((product) => (
-              <ProductGridItem key={product.id} product={product} />
-            ))}
-          </Grid>
+          // StaggerGroup sees one child (the grid) and staggers the grid's items.
+          <StaggerGroup className="">
+            <Grid className="grid grid-cols-2 gap-0! sm:grid-cols-3 lg:grid-cols-4">
+              {(docs as Product[]).map((product) => (
+                <ProductGridItem key={product.id} product={product} />
+              ))}
+            </Grid>
+          </StaggerGroup>
         )
       ) : (
-        <CollectionArchive posts={docs as Post[]} />
+        <StaggerGroup>
+          <CollectionArchive posts={docs as Post[]} />
+        </StaggerGroup>
       )}
     </div>
   )

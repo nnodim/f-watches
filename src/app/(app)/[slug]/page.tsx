@@ -63,10 +63,12 @@ export default async function Page({ params }: Args) {
   const { hero, layout } = page
 
   return (
-    <article className="pt-16 pb-24">
+    <article className="pb-24">
       <RenderHero {...hero} />
-      {slug === 'home' && <RaffleShowcase />}
-      <RenderBlocks blocks={layout} />
+      <div className="relative z-10 flow-root bg-background">
+        {slug === 'home' && <RaffleShowcase />}
+        <RenderBlocks blocks={layout} />
+      </div>
     </article>
   )
 }

@@ -9,6 +9,14 @@ export const Header: GlobalConfig = {
   },
   fields: [
     {
+      name: 'announcement',
+      type: 'text',
+      admin: {
+        description:
+          'Optional slim bar above the header (e.g. a delivery or warranty note). Leave empty to hide it.',
+      },
+    },
+    {
       name: 'navItems',
       type: 'array',
       fields: [

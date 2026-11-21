@@ -35,6 +35,7 @@ import { applyDiscountEndpoint } from './endpoints/discounts'
 import { paystackInitiateDiscountedEndpoint } from './endpoints/payments/paystackInitiate'
 import { runDueRafflesEndpoint, runDueRafflesGetEndpoint } from './endpoints/raffles/runDueDraws'
 import { plugins } from './plugins'
+import { Subscribers } from './collections/Subscribers'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -79,6 +80,7 @@ export default buildConfig({
     Posts,
     PostCategories,
     Categories,
+    Subscribers,
     Media,
   ],
   db: mongooseAdapter({

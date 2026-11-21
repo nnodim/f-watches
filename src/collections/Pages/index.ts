@@ -22,6 +22,11 @@ import {
 } from '@payloadcms/plugin-seo/fields'
 import { revalidatePage, revalidateDelete } from './hooks/revalidatePage'
 import { Features } from '@/blocks/FeaturesBlock/config'
+import { Newsletter } from '@/blocks/Newsletter/config'
+import { BrandGrid } from '@/blocks/BrandGrid/config'
+import { Marquee } from '@/blocks/Marquee/config'
+import { EditorialSplit } from '@/blocks/EditorialSplit/config'
+import { SplitTiles } from '@/blocks/SplitTiles/config'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
@@ -97,7 +102,12 @@ export const Pages: CollectionConfig = {
                 ThreeItemGrid,
                 Banner,
                 FormBlock,
-                Features
+                Features,
+                SplitTiles,
+                EditorialSplit,
+                Marquee,
+                BrandGrid,
+                Newsletter,
               ],
               required: true,
             },

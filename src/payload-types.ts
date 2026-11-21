@@ -84,6 +84,7 @@ export interface Config {
     posts: Post;
     postCategories: PostCategory;
     categories: Category;
+    subscribers: Subscriber;
     media: Media;
     redirects: Redirect;
     forms: Form;
@@ -142,6 +143,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     postCategories: PostCategoriesSelect<false> | PostCategoriesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
@@ -613,6 +615,11 @@ export interface Page {
     | BannerBlock
     | FormBlock
     | FeaturesBlock
+    | SplitTilesBlock
+    | EditorialSplitBlock
+    | MarqueeBlock
+    | BrandGridBlock
+    | NewsletterBlock
   )[];
   meta?: {
     title?: string | null;
@@ -1038,6 +1045,121 @@ export interface FeaturesBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SplitTilesBlock".
+ */
+export interface SplitTilesBlock {
+  /**
+   * Large full-bleed image tiles shown side by side. Portrait images work best.
+   */
+  tiles: {
+    image: string | Media;
+    eyebrow?: string | null;
+    title: string;
+    link: {
+      type?: ('reference' | 'custom') | null;
+      newTab?: boolean | null;
+      reference?: {
+        relationTo: 'pages';
+        value: string | Page;
+      } | null;
+      url?: string | null;
+      label: string;
+    };
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'splitTiles';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EditorialSplitBlock".
+ */
+export interface EditorialSplitBlock {
+  image: string | Media;
+  imagePosition?: ('left' | 'right') | null;
+  eyebrow?: string | null;
+  heading: string;
+  body?: string | null;
+  enableLink?: boolean | null;
+  link?: {
+    type?: ('reference' | 'custom') | null;
+    newTab?: boolean | null;
+    reference?: {
+      relationTo: 'pages';
+      value: string | Page;
+    } | null;
+    url?: string | null;
+    label: string;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'editorialSplit';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MarqueeBlock".
+ */
+export interface MarqueeBlock {
+  /**
+   * Large scrolling words, e.g. Authentic, G-Shock, Tissot.
+   */
+  words: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * Seconds for one full loop. Higher = slower.
+   */
+  duration?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'marquee';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BrandGridBlock".
+ */
+export interface BrandGridBlock {
+  heading?: string | null;
+  brands: {
+    name: string;
+    description?: string | null;
+    image: string | Media;
+    link: {
+      type?: ('reference' | 'custom') | null;
+      newTab?: boolean | null;
+      reference?: {
+        relationTo: 'pages';
+        value: string | Page;
+      } | null;
+      url?: string | null;
+      label: string;
+    };
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'brandGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock".
+ */
+export interface NewsletterBlock {
+  heading?: string | null;
+  description?: string | null;
+  buttonLabel?: string | null;
+  /**
+   * URL that receives a JSON POST { email }. You must provide this endpoint before using the block (see README).
+   */
+  endpoint?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'newsletter';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variants".
  */
 export interface Variant {
@@ -1397,6 +1519,24 @@ export interface PostCategory {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers".
+ */
+export interface Subscriber {
+  id: string;
+  email: string;
+  /**
+   * Set to Unsubscribed to honour an opt-out. Unsubscribed addresses are never re-subscribed by the website form.
+   */
+  status: 'subscribed' | 'unsubscribed';
+  /**
+   * Where the sign-up came from.
+   */
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1637,6 +1777,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: string | Category;
+      } | null)
+    | ({
+        relationTo: 'subscribers';
+        value: string | Subscriber;
       } | null)
     | ({
         relationTo: 'media';
@@ -1965,6 +2109,11 @@ export interface PagesSelect<T extends boolean = true> {
         banner?: T | BannerBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
         features?: T | FeaturesBlockSelect<T>;
+        splitTiles?: T | SplitTilesBlockSelect<T>;
+        editorialSplit?: T | EditorialSplitBlockSelect<T>;
+        marquee?: T | MarqueeBlockSelect<T>;
+        brandGrid?: T | BrandGridBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
       };
   meta?:
     | T
@@ -2116,6 +2265,107 @@ export interface FeaturesBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SplitTilesBlock_select".
+ */
+export interface SplitTilesBlockSelect<T extends boolean = true> {
+  tiles?:
+    | T
+    | {
+        image?: T;
+        eyebrow?: T;
+        title?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EditorialSplitBlock_select".
+ */
+export interface EditorialSplitBlockSelect<T extends boolean = true> {
+  image?: T;
+  imagePosition?: T;
+  eyebrow?: T;
+  heading?: T;
+  body?: T;
+  enableLink?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        reference?: T;
+        url?: T;
+        label?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MarqueeBlock_select".
+ */
+export interface MarqueeBlockSelect<T extends boolean = true> {
+  words?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  duration?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BrandGridBlock_select".
+ */
+export interface BrandGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  brands?:
+    | T
+    | {
+        name?: T;
+        description?: T;
+        image?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock_select".
+ */
+export interface NewsletterBlockSelect<T extends boolean = true> {
+  heading?: T;
+  description?: T;
+  buttonLabel?: T;
+  endpoint?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
@@ -2166,6 +2416,17 @@ export interface CategoriesSelect<T extends boolean = true> {
   gallery?: T;
   generateSlug?: T;
   slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers_select".
+ */
+export interface SubscribersSelect<T extends boolean = true> {
+  email?: T;
+  status?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2712,6 +2973,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Header {
   id: string;
+  /**
+   * Optional slim bar above the header (e.g. a delivery or warranty note). Leave empty to hide it.
+   */
+  announcement?: string | null;
   navItems?:
     | {
         link: {
@@ -2736,6 +3001,10 @@ export interface Header {
  */
 export interface Footer {
   id: string;
+  /**
+   * Short line shown under the logo in the footer.
+   */
+  blurb?: string | null;
   navItems?:
     | {
         link: {
@@ -2751,6 +3020,16 @@ export interface Footer {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Leave empty to keep the current Instagram / TikTok / Snapchat links.
+   */
+  socials?:
+    | {
+        platform: 'instagram' | 'tiktok' | 'snapchat' | 'facebook' | 'x' | 'whatsapp';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2759,6 +3038,7 @@ export interface Footer {
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
+  announcement?: T;
   navItems?:
     | T
     | {
@@ -2782,6 +3062,7 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  blurb?: T;
   navItems?:
     | T
     | {
@@ -2794,6 +3075,13 @@ export interface FooterSelect<T extends boolean = true> {
               url?: T;
               label?: T;
             };
+        id?: T;
+      };
+  socials?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
         id?: T;
       };
   updatedAt?: T;
