@@ -16,6 +16,7 @@ import { EditorialSplitBlock } from './EditorialSplit/Component'
 import { MarqueeBlock } from './Marquee/Component'
 import { BrandGridBlock } from './BrandGrid/Component'
 import { NewsletterBlock } from './Newsletter/Component'
+import { PostsBentoBlock } from './PostsBento/component'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -32,6 +33,7 @@ const blockComponents = {
   marquee: MarqueeBlock,
   brandGrid: BrandGridBlock,
   newsletter: NewsletterBlock,
+  postsBento: PostsBentoBlock,
 }
 
 export const RenderBlocks: React.FC<{

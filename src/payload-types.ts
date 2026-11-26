@@ -86,6 +86,8 @@ export interface Config {
     categories: Category;
     subscribers: Subscriber;
     media: Media;
+    watchCollections: WatchCollection;
+    watchModels: WatchModel;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -145,6 +147,8 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    watchCollections: WatchCollectionsSelect<false> | WatchCollectionsSelect<true>;
+    watchModels: WatchModelsSelect<false> | WatchModelsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -370,7 +374,7 @@ export interface Product {
       }[]
     | null;
   layout?: (CallToActionBlock | ContentBlock | MediaBlock)[] | null;
-  model: string;
+  model?: string | null;
   saleEnabled?: boolean | null;
   saleStart?: string | null;
   saleEnd?: string | null;
@@ -402,6 +406,13 @@ export interface Product {
    */
   isOnSale?: boolean | null;
   relatedProducts?: (string | Product)[] | null;
+  specs?: {
+    movement?: ('automatic' | 'quartz' | 'solar' | 'manual' | 'smart') | null;
+    caseSize?: number | null;
+    caseMaterial?: ('steel' | 'resin' | 'titanium' | 'gold-plated') | null;
+    waterResistance?: number | null;
+    strapType?: ('leather' | 'bracelet' | 'resin') | null;
+  };
   meta?: {
     title?: string | null;
     /**
@@ -410,7 +421,9 @@ export interface Product {
     image?: (string | null) | Media;
     description?: string | null;
   };
-  categories: (string | Category)[];
+  brand: string | Category;
+  watchCollection?: (string | null) | WatchCollection;
+  watchModel?: (string | null) | WatchModel;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -620,6 +633,7 @@ export interface Page {
     | MarqueeBlock
     | BrandGridBlock
     | NewsletterBlock
+    | PostsBentoBlock
   )[];
   meta?: {
     title?: string | null;
@@ -716,7 +730,20 @@ export interface ArchiveBlock {
   populateBy?: ('collection' | 'selection') | null;
   relationTo?: ('posts' | 'products') | null;
   filterType?: ('all' | 'featured' | 'onSale' | 'new-arrival') | null;
+  /**
+   * For products these are brands (e.g. Casio).
+   */
   categories?: (string | Category)[] | null;
+  /**
+   * Narrower than brand. If set, brand is ignored.
+   */
+  watchCollections?: (string | WatchCollection)[] | null;
+  /**
+   * Narrowest. If set, brand and collection are ignored.
+   */
+  watchModels?: (string | WatchModel)[] | null;
+  movement?: ('automatic' | 'quartz' | 'solar' | 'manual' | 'smart')[] | null;
+  caseMaterial?: ('steel' | 'resin' | 'titanium' | 'gold-plated')[] | null;
   limit?: number | null;
   selectedDocs?:
     | {
@@ -751,6 +778,43 @@ export interface Category {
     [k: string]: unknown;
   } | null;
   gallery: (string | Media)[];
+  showInMenu?: boolean | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "watchCollections".
+ */
+export interface WatchCollection {
+  id: string;
+  title: string;
+  brand: string | Category;
+  description?: string | null;
+  image?: (string | null) | Media;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "watchModels".
+ */
+export interface WatchModel {
+  id: string;
+  title: string;
+  watchCollection: string | WatchCollection;
+  description?: string | null;
+  image?: (string | null) | Media;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -1160,6 +1224,88 @@ export interface NewsletterBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PostsBentoBlock".
+ */
+export interface PostsBentoBlock {
+  heading?: string | null;
+  populateBy?: ('collection' | 'selection') | null;
+  categories?: (string | Category)[] | null;
+  /**
+   * The layout has 8 slots. Use 8 for a full grid.
+   */
+  limit?: number | null;
+  selectedPosts?: (string | Post)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'postsBento';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: string;
+  title: string;
+  heroImage?: (string | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  relatedPosts?: (string | Post)[] | null;
+  categories?: (string | PostCategory)[] | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (string | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  authors?: (string | User)[] | null;
+  populatedAuthors?:
+    | {
+        id?: string | null;
+        name?: string | null;
+      }[]
+    | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postCategories".
+ */
+export interface PostCategory {
+  id: string;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variants".
  */
 export interface Variant {
@@ -1454,71 +1600,6 @@ export interface Expense {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
- */
-export interface Post {
-  id: string;
-  title: string;
-  heroImage?: (string | null) | Media;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  relatedPosts?: (string | Post)[] | null;
-  categories?: (string | PostCategory)[] | null;
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  authors?: (string | User)[] | null;
-  populatedAuthors?:
-    | {
-        id?: string | null;
-        name?: string | null;
-      }[]
-    | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "postCategories".
- */
-export interface PostCategory {
-  id: string;
-  title: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "subscribers".
  */
 export interface Subscriber {
@@ -1785,6 +1866,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: string | Media;
+      } | null)
+    | ({
+        relationTo: 'watchCollections';
+        value: string | WatchCollection;
+      } | null)
+    | ({
+        relationTo: 'watchModels';
+        value: string | WatchModel;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2114,6 +2203,7 @@ export interface PagesSelect<T extends boolean = true> {
         marquee?: T | MarqueeBlockSelect<T>;
         brandGrid?: T | BrandGridBlockSelect<T>;
         newsletter?: T | NewsletterBlockSelect<T>;
+        postsBento?: T | PostsBentoBlockSelect<T>;
       };
   meta?:
     | T
@@ -2197,6 +2287,10 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
   relationTo?: T;
   filterType?: T;
   categories?: T;
+  watchCollections?: T;
+  watchModels?: T;
+  movement?: T;
+  caseMaterial?: T;
   limit?: T;
   selectedDocs?: T;
   id?: T;
@@ -2366,6 +2460,19 @@ export interface NewsletterBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PostsBentoBlock_select".
+ */
+export interface PostsBentoBlockSelect<T extends boolean = true> {
+  heading?: T;
+  populateBy?: T;
+  categories?: T;
+  limit?: T;
+  selectedPosts?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
@@ -2414,6 +2521,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   gallery?: T;
+  showInMenu?: T;
   generateSlug?: T;
   slug?: T;
   updatedAt?: T;
@@ -2448,6 +2556,34 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "watchCollections_select".
+ */
+export interface WatchCollectionsSelect<T extends boolean = true> {
+  title?: T;
+  brand?: T;
+  description?: T;
+  image?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "watchModels_select".
+ */
+export interface WatchModelsSelect<T extends boolean = true> {
+  title?: T;
+  watchCollection?: T;
+  description?: T;
+  image?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2749,6 +2885,15 @@ export interface ProductsSelect<T extends boolean = true> {
   isFeatured?: T;
   isOnSale?: T;
   relatedProducts?: T;
+  specs?:
+    | T
+    | {
+        movement?: T;
+        caseSize?: T;
+        caseMaterial?: T;
+        waterResistance?: T;
+        strapType?: T;
+      };
   meta?:
     | T
     | {
@@ -2756,7 +2901,9 @@ export interface ProductsSelect<T extends boolean = true> {
         image?: T;
         description?: T;
       };
-  categories?: T;
+  brand?: T;
+  watchCollection?: T;
+  watchModel?: T;
   generateSlug?: T;
   slug?: T;
   updatedAt?: T;
@@ -2979,7 +3126,8 @@ export interface Header {
   announcement?: string | null;
   navItems?:
     | {
-        link: {
+        type: 'link' | 'megaMenu';
+        link?: {
           type?: ('reference' | 'custom') | null;
           newTab?: boolean | null;
           reference?: {
@@ -2988,6 +3136,38 @@ export interface Header {
           } | null;
           url?: string | null;
           label: string;
+        };
+        label?: string | null;
+        /**
+         * "All brands" lists every brand from the Brands collection, A to Z. Hide a brand with its "Show in menu" checkbox.
+         */
+        source?: ('allBrands' | 'custom') | null;
+        columns?:
+          | {
+              heading?: string | null;
+              links?:
+                | {
+                    link: {
+                      type?: ('reference' | 'custom') | null;
+                      newTab?: boolean | null;
+                      reference?: {
+                        relationTo: 'pages';
+                        value: string | Page;
+                      } | null;
+                      url?: string | null;
+                      label: string;
+                    };
+                    id?: string | null;
+                  }[]
+                | null;
+              id?: string | null;
+            }[]
+          | null;
+        featured?: {
+          image?: (string | null) | Media;
+          title?: string | null;
+          linkLabel?: string | null;
+          linkUrl?: string | null;
         };
         id?: string | null;
       }[]
@@ -3042,6 +3222,7 @@ export interface HeaderSelect<T extends boolean = true> {
   navItems?:
     | T
     | {
+        type?: T;
         link?:
           | T
           | {
@@ -3050,6 +3231,36 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+            };
+        label?: T;
+        source?: T;
+        columns?:
+          | T
+          | {
+              heading?: T;
+              links?:
+                | T
+                | {
+                    link?:
+                      | T
+                      | {
+                          type?: T;
+                          newTab?: T;
+                          reference?: T;
+                          url?: T;
+                          label?: T;
+                        };
+                    id?: T;
+                  };
+              id?: T;
+            };
+        featured?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              linkLabel?: T;
+              linkUrl?: T;
             };
         id?: T;
       };

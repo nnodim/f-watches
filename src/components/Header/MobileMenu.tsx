@@ -1,7 +1,5 @@
 'use client'
 
-import type { Header } from '@/payload-types'
-
 import { CMSLink } from '@/components/Link'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,17 +11,19 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useAuth } from '@/providers/Auth'
-import { MenuIcon } from 'lucide-react'
+import { ChevronDown, MenuIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
-import { links } from './index.client'
+import { useEffect, useState } from 'react'
+import { MenuBrand, NavItem } from './types'
+// import { links } from './index.client'
 
 interface Props {
-  menu: Header['navItems']
+  menu: NavItem[] | null | undefined
+  brands: MenuBrand[]
 }
 
-export function MobileMenu({ menu }: Props) {
+export function MobileMenu({ menu, brands }: Props) {
   const { user } = useAuth()
 
   const pathname = usePathname()
@@ -60,26 +60,68 @@ export function MobileMenu({ menu }: Props) {
         </SheetHeader>
 
         <div className="pt-4">
-          {menu?.length ? (
-            <ul className="flex w-full flex-col">
-              {menu.map((item) => (
-                <li className="py-2" key={item.id}>
-                  <CMSLink {...item.link} className="text-base" appearance="link" />
+          <ul className="flex w-full flex-col">
+            {menu?.map((item) =>
+              item.type === 'megaMenu' ? (
+                <li key={item.id} className="border-b">
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-base uppercase">
+                      {item.label}
+                      <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="pb-4 pl-2">
+                      {item.source === 'allBrands' ? (
+                        <ul className="flex flex-col">
+                          <li>
+                            <Link
+                              href="/brands"
+                              className="block py-1.5 text-sm font-bold uppercase"
+                            >
+                              View all brands →
+                            </Link>
+                          </li>
+                          {brands.map((b) => (
+                            <li key={b.id}>
+                              <Link
+                                href={`/brands/${b.slug}`}
+                                className="block py-1.5 text-sm uppercase"
+                              >
+                                {b.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        item.columns?.map((col) => (
+                          <div key={col.id} className="mb-3">
+                            {col.heading && (
+                              <p className="mb-1 font-mono text-xs uppercase text-primary/50">
+                                {col.heading}
+                              </p>
+                            )}
+                            <ul>
+                              {col.links?.map((l) => (
+                                <li key={l.id} className="py-1.5">
+                                  <CMSLink
+                                    {...l.link}
+                                    appearance="link"
+                                    className="text-sm uppercase"
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </details>
                 </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold">Shop</h2>
-          <hr className="mb-4" />
-          <ul className="flex flex-col gap-3">
-            {links.map((link, i) => (
-              <li key={i}>
-                <Link href={link.href}>{link.title}</Link>
-              </li>
-            ))}
+              ) : (
+                <li className="border-b py-3" key={item.id}>
+                  <CMSLink {...item.link} className="text-base uppercase" appearance="link" />
+                </li>
+              ),
+            )}
           </ul>
         </div>
 

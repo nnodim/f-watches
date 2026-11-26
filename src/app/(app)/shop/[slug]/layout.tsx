@@ -7,6 +7,7 @@ import { getPayload } from 'payload'
 import { RichText } from '@/components/RichText'
 import { Media } from '@/components/Media'
 import { PatternBackground } from '@/components/PatternBackground'
+import { notFound } from 'next/navigation'
 
 const queryCategoryBySlug = async ({ slug }: { slug: string }) => {
   const { isEnabled: draft } = await draftMode()
@@ -37,6 +38,8 @@ export default async function ShopLayout({
 }) {
   const { slug } = await params
   const categoryResult = await queryCategoryBySlug({ slug })
+
+  if (!categoryResult && !defaultCategoryContent[slug]) notFound()
 
   const defaultCategory = defaultCategoryContent[slug]
   const title = categoryResult?.title || defaultCategory?.title

@@ -38,50 +38,77 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
+  return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
+}
+
+const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
+  const url = getServerSideURL()
+
+  return doc?.slug ? `${url}/${doc.slug}` : url
+}
+
+const VIDEO_EXTENSIONS = [
+  'mp4',
+  'mov',
+  'avi',
+  'wmv',
+  'flv',
+  'mkv',
+  'webm',
+  'm4v',
+  'mpeg',
+  'mpg',
+  '3gp',
+]
+const RAW_EXTENSIONS = ['pdf', 'zip', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt']
+
+function getResourceType(filename: string): 'image' | 'video' | 'raw' {
+  const ext = filename.split('.').pop()?.toLowerCase() ?? ''
+  if (VIDEO_EXTENSIONS.includes(ext)) return 'video'
+  if (RAW_EXTENSIONS.includes(ext)) return 'raw'
+  return 'image'
+}
+
 export const cloudinaryAdapter = () => ({
   name: 'cloudinary-adapter',
   async handleUpload({ file }: Parameters<HandleUpload>[0]) {
     try {
-      // createing a function that will upload your file in cloudinary
-      // Uploading the file to Cloudinary using upload_stream.
-      // Since Cloudinary's upload_stream is callback-based, we wrap it in a Promise
-      // so we can use async/await syntax for cleaner, easier handling.
-      // It uploads the file with a specific public_id under "media/", without overwriting existing files.
       const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
-            resource_type: 'auto', // auto-detect file type (image, video, etc.)
-            public_id: `media/${file.filename.replace(/\.[^/.]+$/, '')}`, // Set custom file name without extension, and it also previxed the cleaned filename with media/
-            overwrite: false, // Do not overwrite if a file with the same name exists
-            use_filename: true, // Use original filename
+            resource_type: 'auto',
+            public_id: `media/${file.filename.replace(/\.[^/.]+$/, '')}`,
+            overwrite: false,
+            use_filename: true,
           },
           (error, result) => {
             if (error) return reject(error)
             if (!result) return reject(new Error('No result returned from Cloudinary'))
-            resolve(result) // hanlde result
+            resolve(result)
           },
         )
-        uploadStream.end(file.buffer) // this line send the file to cloudinary it means entire file is already in memory and will be send whole thing at once not in chunk
+        uploadStream.end(file.buffer)
       })
-      file.filename = uploadResult.public_id // Use Cloudinary's public_id as the file's unique name
-      file.mimeType = `${uploadResult.format}` // Set MIME type based on Cloudinary's format (e.g., image/png)
-      file.filesize = uploadResult.bytes // Set the actual file size in bytes, for admin display and validations
+      file.filename = uploadResult.public_id
+      file.mimeType = `${uploadResult.format}`
+      file.filesize = uploadResult.bytes
     } catch (err) {
       console.error('Upload Error', err)
     }
   },
 
   async handleDelete({ filename }: Parameters<HandleDelete>[0]) {
-    // if filename is present then we will look for that file
     try {
-      // We remove the file extension from the filename and then target the file
-      // inside the "media/" folder on Cloudinary (which we used as the upload path)
-      await cloudinary.uploader.destroy(`media/${filename.replace(/\.[^/.]+$/, '')}`)
+      const cleanName = filename.replace(/\.[^/.]+$/, '')
+      await cloudinary.uploader.destroy(`media/${cleanName}`, {
+        resource_type: getResourceType(filename), // <-- match how it was stored
+      })
     } catch (error) {
-      // if something error occured we will catch the error and respond the error in console
       console.error('Cloudinary Delete Error:', error)
     }
   },
+
   staticHandler(req: PayloadRequest) {
     if (!req.url) {
       return new Response('Bad request: missing URL', { status: 400 })
@@ -94,24 +121,20 @@ export const cloudinaryAdapter = () => ({
       return new Response('Filename not found', { status: 404 })
     }
 
+    const resourceType = getResourceType(filename)
+
     const cloudinaryUrl = cloudinary.url(`media/${filename}`, {
       secure: true,
-      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      resource_type: resourceType, // <-- this was the missing piece
+      // image-only transformation — don't apply it to video/raw
+      ...(resourceType === 'image' && {
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      }),
     })
 
     return Response.redirect(cloudinaryUrl, 302)
   },
 })
-
-const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
-}
-
-const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
-  const url = getServerSideURL()
-
-  return doc?.slug ? `${url}/${doc.slug}` : url
-}
 
 export const plugins: Plugin[] = [
   redirectsPlugin({
@@ -192,7 +215,10 @@ export const plugins: Plugin[] = [
         disableLocalStorage: true,
 
         generateFileURL: ({ filename }) => {
-          return cloudinary.url(`media/${filename}`, { secure: true })
+          return cloudinary.url(`media/${filename}`, {
+            secure: true,
+            resource_type: getResourceType(filename), // <-- fix here too
+          })
         },
       },
     },

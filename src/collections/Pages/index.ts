@@ -27,6 +27,7 @@ import { BrandGrid } from '@/blocks/BrandGrid/config'
 import { Marquee } from '@/blocks/Marquee/config'
 import { EditorialSplit } from '@/blocks/EditorialSplit/config'
 import { SplitTiles } from '@/blocks/SplitTiles/config'
+import { PostsBento } from '@/blocks/PostsBento/config'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
@@ -108,6 +109,7 @@ export const Pages: CollectionConfig = {
                 Marquee,
                 BrandGrid,
                 Newsletter,
+                PostsBento,
               ],
               required: true,
             },

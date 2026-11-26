@@ -7,6 +7,7 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
+import { revalidateTag } from 'next/cache'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -47,8 +48,28 @@ export const Categories: CollectionConfig = {
       required: true,
       hasMany: true,
     },
+    {
+      name: 'showInMenu',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: { position: 'sidebar' },
+    },
     slugField({
       position: undefined,
     }),
   ],
+  hooks: {
+    afterChange: [
+      ({ doc }) => {
+        revalidateTag('menu-brands')
+        return doc
+      },
+    ],
+    afterDelete: [
+      ({ doc }) => {
+        revalidateTag('menu-brands')
+        return doc
+      },
+    ],
+  },
 }

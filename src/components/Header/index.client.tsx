@@ -2,42 +2,51 @@
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
 import { CMSLink } from '@/components/Link'
-import Link from 'next/link'
-import React, { Suspense, useRef } from 'react'
-
-import type { Header } from 'src/payload-types'
-import { MobileMenu } from './MobileMenu'
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-
 import { gsap, motionOK, ScrollTrigger, useGSAP } from '@/lib/gsap'
+import { useAuth } from '@/providers/Auth'
 import { cn } from '@/utilities/cn'
+import { Search, User } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
+import type { Header } from 'src/payload-types'
 import { Logo } from '../Logo/Logo'
-import { Button } from '../ui/button'
+import { MegaPanel } from './mega-panel'
+import { MobileMenu } from './MobileMenu'
+import type { MenuBrand } from './types'
 
 type Props = {
   header: Header
+  brands: MenuBrand[]
 }
 
-export const links: { title: string; href: string }[] = [
-  { title: 'All', href: '/shop/all' },
-  { title: 'New Arrivals', href: '/shop/new-arrival' },
-  { title: 'Collections', href: '/brands' },
-]
-
-export function HeaderClient({ header }: Props) {
+export function HeaderClient({ header, brands }: Props) {
   const menu = header.navItems || []
   const pathname = usePathname()
+  const { user } = useAuth()
   const bar = useRef<HTMLDivElement>(null)
-  const isHome = pathname === '/'
+  const isHome = pathname === '/' || pathname.includes('/posts/')
+
+  const [openId, setOpenId] = useState<string | null>(null)
+  const closeTimer = useRef<number | undefined>(undefined)
+  const openItem = menu.find((i) => i.id === openId && i.type === 'megaMenu')
+
+  const open = (id: string) => {
+    window.clearTimeout(closeTimer.current)
+    setOpenId(id)
+  }
+  const scheduleClose = () => {
+    window.clearTimeout(closeTimer.current)
+    closeTimer.current = window.setTimeout(() => setOpenId(null), 140)
+  }
+  const cancelClose = () => window.clearTimeout(closeTimer.current)
+
+  useEffect(() => setOpenId(null), [pathname])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpenId(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // Drops in on load, hides when scrolling down, returns on scroll up.
   useGSAP(
@@ -45,7 +54,6 @@ export function HeaderClient({ header }: Props) {
       motionOK(() => {
         const el = bar.current
         if (!el) return
-
         gsap.from(el, { yPercent: -100, duration: 1, delay: 0.1, ease: 'power3.out' })
 
         let hidden = false
@@ -68,6 +76,8 @@ export function HeaderClient({ header }: Props) {
     { scope: bar },
   )
 
+  const solid = !!openItem
+
   return (
     <>
       {header.announcement ? (
@@ -78,92 +88,95 @@ export function HeaderClient({ header }: Props) {
 
       <div
         ref={bar}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
         className={cn(
-          'z-50 w-full',
+          'z-50 w-full transition-colors duration-300',
           isHome
-            ? 'absolute inset-x-0 top-0 border-transparent bg-transparent text-white'
+            ? solid
+              ? 'absolute inset-x-0 top-0 border-b bg-background text-foreground'
+              : 'absolute inset-x-0 top-0 border-transparent bg-transparent text-white'
             : 'sticky top-0 border-b bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80',
         )}
       >
-        <nav className="container grid h-16 grid-cols-[1fr_auto_1fr] items-center uppercase md:h-20">
-          {/* Left: mobile menu / desktop navigation */}
+        <nav className="container grid grid-cols-[1fr_auto_1fr] items-center uppercase">
+          {/* Left */}
           <div className="flex items-center gap-6">
             <div className="block flex-none md:hidden">
               <Suspense fallback={null}>
-                <MobileMenu menu={menu} />
+                <MobileMenu menu={menu} brands={brands} />
               </Suspense>
             </div>
 
-            {menu.length ? (
-              <div className="hidden gap-4 text-sm md:flex md:items-center">
-                <NavigationMenu className="hidden gap-4 text-sm md:flex md:items-center">
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="navLink relative h-auto bg-transparent p-0 pt-2 pb-6 font-mono text-xs uppercase tracking-widest text-primary/50 hover:bg-transparent hover:text-primary data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent [&.active]:text-primary">
-                        Shop
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <ul className="grid w-50 gap-1 p-4">
-                          {links.map((link, i) => (
-                            <li key={i}>
-                              <NavigationMenuLink asChild>
-                                <CMSLink
-                                  size={'clear'}
-                                  label={link.title}
-                                  url={link.href}
-                                  className="navLink relative"
-                                  appearance="nav"
-                                />
-                              </NavigationMenuLink>
-                            </li>
-                          ))}
-                        </ul>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
-                <ul className="hidden gap-4 text-sm md:flex md:items-center">
-                  {menu.map((item) => (
-                    <li key={item.id}>
-                      <CMSLink
-                        {...item.link}
-                        size={'clear'}
-                        className={cn('navLink relative', {
-                          active:
-                            item.link.url && item.link.url !== '/'
-                              ? pathname.includes(item.link.url)
-                              : false,
-                        })}
-                        appearance="nav"
-                      />
+            <ul className="hidden gap-6 text-sm md:flex md:items-center">
+              {menu.map((item) => {
+                if (item.type === 'megaMenu') {
+                  const isOpen = openId === item.id
+                  return (
+                    <li key={item.id} onMouseEnter={() => open(item.id!)}>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        onClick={() => (isOpen ? setOpenId(null) : open(item.id!))}
+                        className={cn(
+                          'navLink relative py-6 font-mono text-xs uppercase tracking-widest transition-opacity',
+                          isOpen ? 'opacity-100' : 'opacity-70 hover:opacity-100',
+                        )}
+                      >
+                        {item.label}
+                      </button>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+                  )
+                }
+                return (
+                  <li key={item.id} onMouseEnter={() => setOpenId(null)}>
+                    <CMSLink
+                      {...item.link}
+                      size="clear"
+                      className={cn('navLink relative py-6!', {
+                        active:
+                          item.link?.url && item.link.url !== '/'
+                            ? pathname.includes(item.link.url)
+                            : false,
+                      })}
+                      appearance="nav"
+                    />
+                  </li>
+                )
+              })}
+            </ul>
           </div>
 
           {/* Centre: logo */}
           <Link className="flex items-center justify-center py-4" href="/" aria-label="Home">
-            <Logo className="h-auto w-7 md:w-8" />
+            <Logo className="h-auto" />
           </Link>
 
-          {/* Right: search + cart */}
-          <div className="flex items-center justify-end gap-4">
-            <Link href="/search">
-              <Button
-                variant="nav"
-                size="clear"
-                className="navLink relative items-end hover:cursor-pointer"
-              >
-                <span>Search</span>
-              </Button>
+          {/* Right: search, account, cart */}
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
+            <Link
+              href="/search"
+              aria-label="Search"
+              className="relative p-2 transition-opacity hover:opacity-60"
+            >
+              <Search className="size-5" strokeWidth={1.5} />
+            </Link>
+            <Link
+              href={user ? '/account' : '/login'}
+              aria-label={user ? 'My account' : 'Log in'}
+              className="relative hidden p-2 transition-opacity hover:opacity-60 sm:block"
+            >
+              <User className="size-5" strokeWidth={1.5} />
             </Link>
             <Suspense fallback={<OpenCartButton />}>
               <Cart />
             </Suspense>
           </div>
         </nav>
+
+        {openItem && (
+          <MegaPanel item={openItem} brands={brands} onNavigate={() => setOpenId(null)} />
+        )}
       </div>
     </>
   )

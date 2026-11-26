@@ -1,6 +1,5 @@
 'use client'
 
-import { CursorRing } from '@/components/motion/CursorRing'
 import { ScrollProgress } from '@/components/motion/ScrollProgress'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import Lenis from 'lenis'
@@ -44,7 +43,6 @@ export const MotionProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <>
       <ScrollProgress />
-      <CursorRing />
       {children}
     </>
   )

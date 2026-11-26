@@ -43,7 +43,7 @@ export const CursorRing: React.FC = () => {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-70 size-9 rounded-full border border-white opacity-0 mix-blend-difference"
+      className="pointer-events-none fixed left-0 top-0 z-100 size-9 rounded-full border border-white opacity-0 mix-blend-difference"
     />
   )
 }

@@ -13,10 +13,19 @@ type SlideLink = { id?: string | null; link: React.ComponentProps<typeof CMSLink
 type Slide = {
   id?: string | null
   image: unknown
+  poster?: unknown // optional still shown before the video loads / with reduced motion
   caption?: string | null
   text?: string | null
   links?: SlideLink[] | null
 }
+
+type MediaDoc = { url?: string | null; mimeType?: string | null }
+
+const isVideo = (m: unknown): m is MediaDoc =>
+  !!m && typeof m === 'object' && !!(m as MediaDoc).mimeType?.startsWith('video/')
+
+const posterUrl = (m: unknown) =>
+  m && typeof m === 'object' ? ((m as MediaDoc).url ?? undefined) : undefined
 
 /** Snap the page to each slide while scrolling through the hero. Set false for free scrolling. */
 const SNAP = true
@@ -84,6 +93,22 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
           '[data-hero-text] > * > :not(h1), [data-hero-cta], [data-hero-meta]',
         )
         if (rest.length) intro.from(rest, { opacity: 0, y: 24, duration: 1, stagger: 0.12 }, 0.8)
+
+        const saveData = (navigator as any).connection?.saveData === true
+        panelEls.forEach((panel) => {
+          const video = panel.querySelector<HTMLVideoElement>('video[data-panel-video]')
+          if (!video || saveData) return
+          video.muted = true // some browsers ignore the muted attribute set by React
+          ScrollTrigger.create({
+            trigger: panel,
+            start: 'top bottom',
+            end: 'bottom top',
+            onToggle: (self) => {
+              if (self.isActive) video.play().catch(() => {})
+              else video.pause()
+            },
+          })
+        })
 
         if (n < 2) return
 
@@ -164,7 +189,7 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
     <section ref={root} className="relative isolate -mt-px bg-neutral-950 text-white">
       {panels.map((slide, i) => {
         const isFirst = i === 0
-        const image = (slide?.image ?? media) as never
+        const image: unknown = slide?.image ?? media
         const slideLinks = (slide?.links ?? []) as SlideLink[]
 
         return (
@@ -178,8 +203,26 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
             {/* Background */}
             <div data-panel-bg aria-hidden className="absolute inset-0">
               <div data-panel-zoom className="absolute inset-0">
-                {image ? (
-                  <Media fill priority={isFirst} resource={image} imgClassName="object-cover" />
+                {isVideo(image) ? (
+                  <video
+                    data-panel-video
+                    src={image.url ?? undefined}
+                    poster={posterUrl(slide?.poster)}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                    preload={isFirst ? 'auto' : 'metadata'}
+                    disablePictureInPicture
+                    aria-hidden
+                  />
+                ) : image ? (
+                  <Media
+                    fill
+                    priority={isFirst}
+                    resource={image as never}
+                    imgClassName="object-cover"
+                  />
                 ) : null}
               </div>
             </div>
