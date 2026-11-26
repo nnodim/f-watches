@@ -8,8 +8,33 @@ const toID = (value: unknown): string | undefined => {
   return undefined
 }
 
-export const syncTaxonomy: CollectionBeforeChangeHook = async ({ data, req }) => {
-  const watchModelID = toID(data.watchModel)
+export const syncTaxonomy: CollectionBeforeChangeHook = async ({ data, originalDoc, req }) => {
+  const hasField = (field: 'brand' | 'watchCollection' | 'watchModel') =>
+    Object.prototype.hasOwnProperty.call(data, field)
+  const hasBrand = hasField('brand')
+  const hasWatchCollection = hasField('watchCollection')
+  const hasWatchModel = hasField('watchModel')
+
+  if (!hasBrand && !hasWatchCollection && !hasWatchModel) return data
+
+  const brandID = toID(hasBrand ? data.brand : originalDoc?.brand)
+  let watchCollectionID = toID(
+    hasWatchCollection ? data.watchCollection : originalDoc?.watchCollection,
+  )
+  let watchModelID = toID(hasWatchModel ? data.watchModel : originalDoc?.watchModel)
+
+  if (hasBrand && !brandID) {
+    data.watchCollection = null
+    data.watchModel = null
+    return data
+  }
+
+  if (hasWatchCollection && !watchCollectionID) {
+    data.watchModel = null
+    return data
+  }
+
+  let modelCollectionID: string | undefined
   if (watchModelID) {
     const model = await req.payload.findByID({
       collection: 'watchModels',
@@ -17,12 +42,25 @@ export const syncTaxonomy: CollectionBeforeChangeHook = async ({ data, req }) =>
       depth: 0,
       req,
     })
-    const watchCollectionID = toID(model.watchCollection)
-    if (!watchCollectionID) throw new Error('Watch model must be linked to a watch collection')
-    data.watchCollection = watchCollectionID
+    modelCollectionID = toID(model.watchCollection)
+    if (!modelCollectionID) throw new Error('Watch model must be linked to a watch collection')
   }
 
-  const watchCollectionID = toID(data.watchCollection)
+  if (hasWatchModel && !watchModelID) {
+    data.watchModel = null
+  } else if (hasWatchModel && modelCollectionID) {
+    watchCollectionID = modelCollectionID
+    data.watchCollection = watchCollectionID
+  } else if (
+    hasWatchCollection &&
+    watchCollectionID &&
+    watchModelID &&
+    modelCollectionID !== watchCollectionID
+  ) {
+    watchModelID = undefined
+    data.watchModel = null
+  }
+
   if (watchCollectionID) {
     const col = await req.payload.findByID({
       collection: 'watchCollections',
@@ -32,6 +70,13 @@ export const syncTaxonomy: CollectionBeforeChangeHook = async ({ data, req }) =>
     })
     const brand = toID(col.brand)
     if (!brand) throw new Error('Watch collection must be linked to a brand')
+
+    if (hasBrand && brandID && brandID !== brand && !hasWatchCollection && !hasWatchModel) {
+      data.watchCollection = null
+      data.watchModel = null
+      return data
+    }
+
     data.brand = brand
   }
 

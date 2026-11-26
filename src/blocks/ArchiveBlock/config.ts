@@ -107,7 +107,7 @@ export const Archive: Block = {
         const cols = idsOf(s?.watchCollections)
         if (cols.length) return { watchCollection: { in: cols } } as Where
         const brands = idsOf(s?.categories)
-        if (brands.length) return { brand: { in: brands } } as Where
+        if (brands.length) return { 'watchCollection.brand': { in: brands } } as Where
         return true
       },
     },
