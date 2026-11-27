@@ -56,12 +56,13 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
       // Most specific taxonomy level wins; each level implies the ones above it.
       if (modelIds.length) and.push({ watchModel: { in: modelIds } })
       else if (collectionIds.length) and.push({ watchCollection: { in: collectionIds } })
-      else if (brandIds.length) and.push({ categories: { in: brandIds } })
+      else if (brandIds.length) and.push({ brand: { in: brandIds } })
 
       if (movement?.length) and.push({ 'specs.movement': { in: movement } })
       if (caseMaterial?.length) and.push({ 'specs.caseMaterial': { in: caseMaterial } })
 
       if (filterType === 'featured') and.push({ isFeatured: { equals: true } })
+      if (filterType === 'limited') and.push({ isLimitedEdition: { equals: true } })
       if (filterType === 'onSale') and.push({ isOnSale: { equals: true } })
       if (filterType === 'new-arrival')
         and.push({
@@ -129,6 +130,7 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
 
       if (movement?.length) qs.set('movement', movement.join(','))
       if (caseMaterial?.length) qs.set('material', caseMaterial.join(','))
+      if (filterType === 'limited') qs.set('limited', 'true')
 
       const query = qs.toString()
       if (query) viewMoreLink += `?${query}`

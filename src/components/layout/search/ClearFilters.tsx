@@ -9,6 +9,7 @@ const FILTER_PARAMS = [
   'material',
   'caseSize',
   'page',
+  'limited',
 ]
 
 export function ClearFilters() {

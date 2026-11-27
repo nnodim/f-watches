@@ -13,22 +13,31 @@ export const BrandGridBlock: React.FC<Props> = ({ heading, brands }) => {
   return (
     <section className="container md:py-24">
       {heading && (
-        <MaskText as="h2" className="mb-14 text-center text-4xl font-light tracking-tight md:text-5xl">
+        <MaskText
+          as="h2"
+          className="mb-14 text-center text-4xl font-light tracking-tight md:text-5xl"
+        >
           {heading}
         </MaskText>
       )}
       <div className="grid gap-10 md:grid-cols-2">
         {brands.map((brand, i) => (
           <article key={brand.id ?? i} className="relative flex flex-col gap-5">
-            <ClipReveal mode="up" className="aspect-16/11">
+            <ClipReveal mode="up" className="aspect-16/11 group">
               <Parallax className="absolute inset-0">
-                <Media fill resource={brand.image} imgClassName="object-cover" />
+                <Media
+                  fill
+                  resource={brand.image}
+                  imgClassName="object-cover transition duration-700 group-hover:scale-105"
+                />
               </Parallax>
             </ClipReveal>
             <Reveal className="flex flex-col gap-3">
               <h3 className="text-3xl font-light tracking-tight">{brand.name}</h3>
               {brand.description && (
-                <p className="max-w-md leading-relaxed text-muted-foreground">{brand.description}</p>
+                <p className="max-w-md leading-relaxed text-muted-foreground">
+                  {brand.description}
+                </p>
               )}
               <CMSLink
                 {...brand.link}

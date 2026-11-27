@@ -63,6 +63,7 @@ export const Archive: Block = {
         { label: 'Featured', value: 'featured' },
         { label: 'On Sale', value: 'onSale' },
         { label: 'New Arrivals', value: 'new-arrival' },
+        { label: 'Limited Editions', value: 'limited' },
       ],
       defaultValue: 'all',
     },

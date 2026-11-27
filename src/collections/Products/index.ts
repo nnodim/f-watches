@@ -77,10 +77,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     salePriceInNGN: true,
     costPriceInNGN: true,
     costPriceInUSD: true,
-    categories: true,
+    brand: true,
     inventory: true,
     watchCollection: true,
     watchModel: true,
+    isLimitedEdition: true,
     meta: true,
   },
   fields: [
@@ -216,6 +217,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               name: 'isFeatured',
               type: 'checkbox',
               label: 'Featured product',
+              defaultValue: false,
+            },
+            {
+              name: 'isLimitedEdition',
+              label: 'Limited Edition',
+              type: 'checkbox',
               defaultValue: false,
             },
             {

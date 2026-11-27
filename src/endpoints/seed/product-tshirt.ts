@@ -6,7 +6,7 @@ type ProductArgs = {
   metaImage: Media
   contentImage: Media
   variantTypes: VariantType[]
-  categories: Category[]
+  brand: Category
   relatedProducts: Product[]
 }
 
@@ -18,7 +18,7 @@ export const productTshirtData: (
   metaImage,
   contentImage,
   variantTypes,
-  categories,
+  brand,
 }) => {
   return {
     enableVariants: true,
@@ -1134,7 +1134,7 @@ export const productTshirtData: (
         ],
       },
     ],
-    categories: categories,
+    brand,
     description: {
       root: {
         children: [

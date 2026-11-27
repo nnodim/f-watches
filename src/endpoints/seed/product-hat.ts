@@ -6,7 +6,7 @@ type ProductArgs = {
   galleryImage: Media
   metaImage: Media
   variantTypes: VariantType[]
-  categories: Category[]
+  brand: Category
   relatedProducts: Product[]
 }
 
@@ -15,7 +15,7 @@ export const productHatData: (args: ProductArgs) => RequiredDataFromCollectionSl
   relatedProducts,
   metaImage,
   variantTypes,
-  categories,
+  brand,
 }) => {
   return {
     meta: {
@@ -26,7 +26,7 @@ export const productHatData: (args: ProductArgs) => RequiredDataFromCollectionSl
     },
     _status: 'published',
     layout: [],
-    categories: categories,
+    brand,
     description: {
       root: {
         children: [

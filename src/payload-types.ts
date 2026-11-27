@@ -401,6 +401,7 @@ export interface Product {
    */
   costPriceInUSD?: number | null;
   isFeatured?: boolean | null;
+  isLimitedEdition?: boolean | null;
   /**
    * Automatically set when sale pricing is active.
    */
@@ -729,7 +730,7 @@ export interface ArchiveBlock {
   } | null;
   populateBy?: ('collection' | 'selection') | null;
   relationTo?: ('posts' | 'products') | null;
-  filterType?: ('all' | 'featured' | 'onSale' | 'new-arrival') | null;
+  filterType?: ('all' | 'featured' | 'onSale' | 'new-arrival' | 'limited') | null;
   /**
    * For products these are brands (e.g. Casio).
    */
@@ -2883,6 +2884,7 @@ export interface ProductsSelect<T extends boolean = true> {
   costPriceInNGN?: T;
   costPriceInUSD?: T;
   isFeatured?: T;
+  isLimitedEdition?: T;
   isOnSale?: T;
   relatedProducts?: T;
   specs?:

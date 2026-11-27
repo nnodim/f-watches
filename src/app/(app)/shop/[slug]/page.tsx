@@ -24,7 +24,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-const RESERVED_SLUGS = ['all', 'search', 'new-arrival', 'featured', 'sale']
+const RESERVED_SLUGS = ['all', 'search', 'new-arrival', 'featured', 'sale', 'limited-edition']
 
 const toArray = (v?: string | string[]) =>
   (Array.isArray(v) ? v : [v ?? ''])
@@ -42,6 +42,7 @@ async function page({ searchParams, params }: Props) {
     movement,
     material,
     caseSize,
+    limited,
     page: pageParam,
   } = await searchParams
   const { slug } = await params
@@ -81,10 +82,16 @@ async function page({ searchParams, params }: Props) {
     })
   }
 
-  // Brand: ?category= wins, otherwise the path slug decides
+  // Apply an explicit brand independently from the listing mode.
   if (brandIds.length) {
-    whereConditions.push({ categories: { in: brandIds } })
-  } else if (slug === 'new-arrival') {
+    whereConditions.push({ brand: { in: brandIds } })
+  }
+
+  if (slug === 'limited-edition' || limited === 'true') {
+    whereConditions.push({ isLimitedEdition: { equals: true } })
+  }
+
+  if (slug === 'new-arrival') {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
     whereConditions.push({ createdAt: { greater_than: thirtyDaysAgo.toISOString() } })
@@ -92,8 +99,8 @@ async function page({ searchParams, params }: Props) {
     whereConditions.push({ isFeatured: { equals: true } })
   } else if (slug === 'sale') {
     whereConditions.push({ isOnSale: { equals: true } })
-  } else if (!RESERVED_SLUGS.includes(slug)) {
-    whereConditions.push({ 'categories.slug': { equals: slug } })
+  } else if (!brandIds.length && !RESERVED_SLUGS.includes(slug)) {
+    whereConditions.push({ 'brand.slug': { equals: slug } })
   }
 
   // Collection / model (slugs)
@@ -187,7 +194,7 @@ async function page({ searchParams, params }: Props) {
 
         {products?.docs.length > 0 ? (
           <>
-            <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Grid className="grid grid-cols-2 gap-0! lg:grid-cols-3 border-t border-l border-foreground">
               {products.docs.map((product) => (
                 <ProductGridItem key={product.id} product={product} />
               ))}

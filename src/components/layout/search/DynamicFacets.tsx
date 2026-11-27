@@ -88,7 +88,7 @@ async function ModelList({
     collection: 'watchModels',
     where: collectionSlugs.length
       ? { 'watchCollection.slug': { in: collectionSlugs } }
-      : { brand: { in: brandIds } },
+      : { 'watchCollection.brand': { in: brandIds } },
     sort: 'title',
     limit: 200,
     depth: 0,

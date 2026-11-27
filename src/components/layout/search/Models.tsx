@@ -15,8 +15,8 @@ async function ModelList({ categoryId }: { currentSlug: string; categoryId?: str
 
   // If we have a specific category, filter by it
   if (categoryId) {
-    whereClause.categories = {
-      contains: categoryId,
+    whereClause.brand = {
+      equals: categoryId,
     }
   }
 
