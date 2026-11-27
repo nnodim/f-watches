@@ -1,5 +1,5 @@
-import { USD } from "@payloadcms/plugin-ecommerce"
-import { CurrenciesConfig, Currency } from "@payloadcms/plugin-ecommerce/types"
+import { USD } from '@payloadcms/plugin-ecommerce'
+import { CurrenciesConfig, Currency } from '@payloadcms/plugin-ecommerce/types'
 
 export type SortFilterItem = {
   reverse: boolean
@@ -62,3 +62,25 @@ export const currenciesConfig: CurrenciesConfig = {
   defaultCurrency: 'NGN',
   supportedCurrencies: [NGN, USD],
 }
+
+export const movementOptions = [
+  { label: 'Automatic', value: 'automatic' },
+  { label: 'Quartz', value: 'quartz' },
+  { label: 'Solar', value: 'solar' },
+  { label: 'Hand-wound', value: 'manual' },
+  { label: 'Smart', value: 'smart' },
+]
+
+export const caseMaterialOptions = [
+  { label: 'Stainless steel', value: 'steel' },
+  { label: 'Resin', value: 'resin' },
+  { label: 'Titanium', value: 'titanium' },
+  { label: 'Gold plated', value: 'gold-plated' },
+]
+
+export const caseSizeRanges = [
+  { label: 'Under 36mm', min: 0, max: 35.99 },
+  { label: '36-40mm', min: 36, max: 40 },
+  { label: '41-44mm', min: 41, max: 44 },
+  { label: '45mm+', min: 45, max: 200 },
+]

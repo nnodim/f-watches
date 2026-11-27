@@ -1,0 +1,185 @@
+{
+  "layout": [
+    {
+      "blockType": "splitTiles",
+      "tiles": [
+        {
+          "image": "69acf85d15a005ace5d71e1a",
+          "eyebrow": "Part of the collection",
+          "title": "Clean, bold, and built different",
+          "link": { "type": "custom", "url": "/shop/all", "label": "Discover" }
+        },
+        {
+          "image": "69acf94bb5bae1f52bdad67d",
+          "eyebrow": "Wear it your way",
+          "title": "Designed to move with you",
+          "link": { "type": "custom", "url": "/shop/all", "label": "Discover" }
+        }
+      ]
+    },
+    {
+      "blockType": "archive",
+      "introContent": {
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "Featured Watches",
+                  "type": "text",
+                  "version": 1
+                }
+              ],
+              "direction": null,
+              "format": "start",
+              "indent": 0,
+              "type": "heading",
+              "version": 1,
+              "tag": "h3"
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "type": "root",
+          "version": 1
+        }
+      },
+      "populateBy": "collection",
+      "relationTo": "products",
+      "filterType": "featured",
+      "limit": 6,
+      "id": "697b7c8489c57f34dad4a5be",
+      "blockName": "featured"
+    },
+    {
+      "blockType": "marquee",
+      "duration": 40,
+      "words": [
+        { "text": "Authentic" },
+        { "text": "G-Shock" },
+        { "text": "Tissot" },
+        { "text": "Affordable" },
+        { "text": "Nigeria" }
+      ]
+    },
+    {
+      "blockType": "archive",
+      "introContent": {
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "All Products",
+                  "type": "text",
+                  "version": 1
+                }
+              ],
+              "direction": null,
+              "format": "",
+              "indent": 0,
+              "type": "paragraph",
+              "version": 1,
+              "textFormat": 0,
+              "textStyle": ""
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "type": "root",
+          "version": 1
+        }
+      },
+      "populateBy": "collection",
+      "relationTo": "products",
+      "filterType": "all",
+      "limit": 8,
+      "id": "697b7cf989c57f34dad4a5c1",
+      "blockName": "All Products"
+    },
+    {
+      "blockType": "editorialSplit",
+      "image": "69acf88cb5bae1f52bdad630",
+      "imagePosition": "left",
+      "eyebrow": "The F-WATCHES difference",
+      "heading": "Own a timepiece that defines you",
+      "body": "From bold G-Shock designs to sleek Tissot craftsmanship, Fwatches brings the best of global watchmaking to your wrist. Shop authentic, stylish, and durable watches, made for every moment that matters.",
+      "enableLink": true,
+      "link": { "type": "custom", "url": "/shop/all", "label": "Shop Now" }
+    },
+    {
+      "blockType": "brandGrid",
+      "heading": "Shop by brand",
+      "brands": [
+        {
+          "name": "G-Shock",
+          "description": "Bold, durable designs built for every day.",
+          "image": "69acf85d15a005ace5d71e1a",
+          "link": { "type": "custom", "url": "/shop/all", "label": "Discover the collection" }
+        },
+        {
+          "name": "Tissot",
+          "description": "Sleek Swiss craftsmanship for the moments that matter.",
+          "image": "69acf94bb5bae1f52bdad67d",
+          "link": { "type": "custom", "url": "/shop/all", "label": "Discover the collection" }
+        }
+      ]
+    },
+    {
+      "blockType": "archive",
+      "introContent": {
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "Recent posts",
+                  "type": "text",
+                  "version": 1
+                }
+              ],
+              "direction": null,
+              "format": "",
+              "indent": 0,
+              "type": "heading",
+              "version": 1,
+              "tag": "h3"
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "type": "root",
+          "version": 1
+        }
+      },
+      "populateBy": "collection",
+      "relationTo": "posts",
+      "filterType": "all",
+      "limit": 3,
+      "id": "697b7d5189c57f34dad4a5c4",
+      "blockName": "Recent posts"
+    },
+    {
+      "blockType": "newsletter",
+      "heading": "Stay in time",
+      "description": "New arrivals and restocks, sent to your inbox.",
+      "buttonLabel": "Subscribe",
+      "endpoint": "/api/newsletter"
+    }
+  ]
+}

@@ -245,7 +245,7 @@ export const seed = async ({
       galleryImage: imageHat,
       metaImage: imageHat,
       variantTypes: [colorVariantType],
-      categories: [hatsCategory],
+      brand: hatsCategory,
       relatedProducts: [],
     }),
   })
@@ -261,7 +261,7 @@ export const seed = async ({
       metaImage: imageTshirtBlack,
       contentImage: imageHero,
       variantTypes: [colorVariantType, sizeVariantType],
-      categories: [tshirtsCategory],
+      brand: tshirtsCategory,
       relatedProducts: [productHat],
     }),
   })

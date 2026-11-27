@@ -14,6 +14,7 @@ import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { RichText } from '@/components/RichText'
 import { PayloadRedirects } from '@/components/PayloadRedirects'
+import { PostTransitionReceiver } from '@/components/PostTransitionReciever'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -52,8 +53,9 @@ export default async function Post({ params: paramsPromise }: Args) {
   if (!post) return <PayloadRedirects url={url} />
 
   return (
-    <article className="pt-16 pb-16">
+    <article className="pb-16">
       <PageClient />
+      <PostTransitionReceiver />
 
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
@@ -62,7 +64,7 @@ export default async function Post({ params: paramsPromise }: Args) {
 
       <PostHero post={post} />
 
-      <div className="flex flex-col items-center gap-4 pt-8">
+      <div className="flex flex-col items-center gap-4 pt-16">
         <div className="container">
           <RichText className="max-w-3xl mx-auto" data={post.content} enableGutter={false} />
           {post.relatedPosts && post.relatedPosts.length > 0 && (

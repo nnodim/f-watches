@@ -35,6 +35,9 @@ import { applyDiscountEndpoint } from './endpoints/discounts'
 import { paystackInitiateDiscountedEndpoint } from './endpoints/payments/paystackInitiate'
 import { runDueRafflesEndpoint, runDueRafflesGetEndpoint } from './endpoints/raffles/runDueDraws'
 import { plugins } from './plugins'
+import { Subscribers } from './collections/Subscribers'
+import { WatchCollections } from './collections/WatchCollections'
+import { WatchModels } from './collections/WatchModel'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -79,7 +82,10 @@ export default buildConfig({
     Posts,
     PostCategories,
     Categories,
+    Subscribers,
     Media,
+    WatchCollections,
+    WatchModels
   ],
   db: mongooseAdapter({
     url: process.env.DATABASE_URL || '',

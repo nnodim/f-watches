@@ -32,7 +32,7 @@ export const CarouselBlock: React.FC<
       ...(flattenedCategories && flattenedCategories.length > 0
         ? {
             where: {
-              categories: {
+              brand: {
                 in: flattenedCategories,
               },
             },

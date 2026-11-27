@@ -3,7 +3,7 @@ import { Content } from '@/blocks/Content/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { costPricesField } from '@/components/Fields/costPricesField'
 import { syncSaleFlags } from '@/hooks/syncSaleFlags'
-import { currenciesConfig } from '@/lib/constants'
+import { caseMaterialOptions, currenciesConfig, movementOptions } from '@/lib/constants'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { amountField } from '@payloadcms/plugin-ecommerce'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
@@ -23,12 +23,13 @@ import {
 } from '@payloadcms/richtext-lexical'
 import { revalidatePath } from 'next/cache'
 import { DefaultDocumentIDType, slugField, Where } from 'payload'
+import { syncTaxonomy } from './hooks/syncTaxonomy'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   hooks: {
     ...(defaultCollection.hooks || {}),
-    beforeChange: [...(defaultCollection.hooks?.beforeChange || []), syncSaleFlags],
+    beforeChange: [...(defaultCollection.hooks?.beforeChange || []), syncSaleFlags, syncTaxonomy],
     afterChange: [
       ...(defaultCollection.hooks?.afterChange || []),
       ({ doc, req: { context } }) => {
@@ -76,8 +77,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     salePriceInNGN: true,
     costPriceInNGN: true,
     costPriceInUSD: true,
-    categories: true,
+    brand: true,
     inventory: true,
+    watchCollection: true,
+    watchModel: true,
+    isLimitedEdition: true,
     meta: true,
   },
   fields: [
@@ -173,7 +177,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               name: 'model',
               type: 'text',
               label: 'Model',
-              required: true,
             },
             {
               name: 'saleEnabled',
@@ -217,6 +220,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               defaultValue: false,
             },
             {
+              name: 'isLimitedEdition',
+              label: 'Limited Edition',
+              type: 'checkbox',
+              defaultValue: false,
+            },
+            {
               name: 'isOnSale',
               type: 'checkbox',
               label: 'On sale',
@@ -252,6 +261,38 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
           label: 'Product Details',
         },
         {
+          label: 'Specs',
+          fields: [
+            {
+              name: 'specs',
+              type: 'group',
+              label: false,
+              fields: [
+                { name: 'movement', type: 'select', options: movementOptions, index: true },
+                {
+                  name: 'caseSize',
+                  type: 'number',
+                  label: 'Case size (mm)',
+                  min: 20,
+                  max: 70,
+                  index: true,
+                },
+                { name: 'caseMaterial', type: 'select', options: caseMaterialOptions, index: true },
+                { name: 'waterResistance', type: 'number', label: 'Water resistance (m)' },
+                {
+                  name: 'strapType',
+                  type: 'select',
+                  options: [
+                    { label: 'Leather', value: 'leather' },
+                    { label: 'Steel bracelet', value: 'bracelet' },
+                    { label: 'Resin', value: 'resin' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
           name: 'meta',
           label: 'SEO',
           fields: [
@@ -281,15 +322,54 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       ],
     },
     {
-      name: 'categories',
+      name: 'brand',
       type: 'relationship',
       admin: {
         position: 'sidebar',
         sortOptions: 'title',
       },
       required: true,
-      hasMany: true,
       relationTo: 'categories',
+    },
+    {
+      name: 'watchCollection',
+      label: 'Collection',
+      type: 'relationship',
+      relationTo: 'watchCollections',
+      index: true,
+      admin: { position: 'sidebar' },
+      filterOptions: ({ data }) => {
+        const brandValue: unknown = data?.brand
+        const brands: unknown[] = Array.isArray(brandValue)
+          ? brandValue
+          : brandValue
+            ? [brandValue]
+            : []
+        const brandIDs = brands
+          .map((brand) =>
+            typeof brand === 'object' && brand !== null && 'id' in brand ? brand.id : brand,
+          )
+          .filter(
+            (brandID): brandID is DefaultDocumentIDType =>
+              typeof brandID === 'string' || typeof brandID === 'number',
+          )
+        return brandIDs.length ? { brand: { in: brandIDs } } : true
+      },
+    },
+    {
+      name: 'watchModel',
+      label: 'Model',
+      type: 'relationship',
+      relationTo: 'watchModels',
+      index: true,
+      admin: { position: 'sidebar' },
+      filterOptions: ({ data }) => {
+        const col =
+          typeof data?.watchCollection === 'object'
+            ? data.watchCollection?.id
+            : data?.watchCollection
+        return col ? { watchCollection: { equals: col } } : true
+      },
     },
     slugField(),
   ],

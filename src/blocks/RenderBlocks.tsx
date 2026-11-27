@@ -11,6 +11,12 @@ import React, { Fragment } from 'react'
 
 import type { Page } from '../payload-types'
 import { FeaturesBlock } from './FeaturesBlock/Component'
+import { SplitTilesBlock } from './SplitTiles/Component'
+import { EditorialSplitBlock } from './EditorialSplit/Component'
+import { MarqueeBlock } from './Marquee/Component'
+import { BrandGridBlock } from './BrandGrid/Component'
+import { NewsletterBlock } from './Newsletter/Component'
+import { PostsBentoBlock } from './PostsBento/component'
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -22,6 +28,12 @@ const blockComponents = {
   mediaBlock: MediaBlock,
   threeItemGrid: ThreeItemGridBlock,
   features: FeaturesBlock,
+  splitTiles: SplitTilesBlock,
+  editorialSplit: EditorialSplitBlock,
+  marquee: MarqueeBlock,
+  brandGrid: BrandGridBlock,
+  newsletter: NewsletterBlock,
+  postsBento: PostsBentoBlock,
 }
 
 export const RenderBlocks: React.FC<{

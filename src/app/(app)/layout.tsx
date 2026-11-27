@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AdminBar } from '@/components/AdminBar'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { CursorRing } from '@/components/motion/CursorRing'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
@@ -13,6 +14,8 @@ import { Instrument_Sans, Montserrat, EB_Garamond, Roboto } from 'next/font/goog
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { headers } from 'next/headers'
+import { MotionProvider } from '@/providers/Motion'
+import { FooterReveal } from '@/components/reveal-footer'
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -91,15 +94,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </head>
       <body>
         <Providers>
-          <AdminBar />
           <LivePreviewListener />
-
           <Header />
-          <main className="font-instrument-sans">
-            {children}
-            <Analytics />
-          </main>
-          <Footer />
+          <CursorRing />
+          <FooterReveal footer={<Footer />}>
+            <main className="font-instrument-sans">
+              <MotionProvider>{children}</MotionProvider>
+              <Analytics />
+            </main>
+          </FooterReveal>
         </Providers>
       </body>
     </html>

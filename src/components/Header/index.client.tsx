@@ -1,120 +1,183 @@
 'use client'
-import { CMSLink } from '@/components/Link'
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
-import Link from 'next/link'
-import React, { Suspense } from 'react'
-
-import { MobileMenu } from './MobileMenu'
-import type { Header } from 'src/payload-types'
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-
-import { usePathname } from 'next/navigation'
+import { CMSLink } from '@/components/Link'
+import { gsap, motionOK, ScrollTrigger, useGSAP } from '@/lib/gsap'
+import { useAuth } from '@/providers/Auth'
 import { cn } from '@/utilities/cn'
+import { Search, User } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
+import type { Header } from 'src/payload-types'
 import { Logo } from '../Logo/Logo'
-import { SearchIcon } from 'lucide-react'
-import { Button } from '../ui/button'
+import { MegaPanel } from './mega-panel'
+import { MobileMenu } from './MobileMenu'
+import type { MenuBrand } from './types'
 
 type Props = {
   header: Header
+  brands: MenuBrand[]
 }
 
-export const links: { title: string; href: string }[] = [
-  { title: 'All', href: '/shop/all' },
-  { title: 'New Arrivals', href: '/shop/new-arrival' },
-  { title: 'Collections', href: '/brands' },
-]
-
-export function HeaderClient({ header }: Props) {
+export function HeaderClient({ header, brands }: Props) {
   const menu = header.navItems || []
   const pathname = usePathname()
+  const { user } = useAuth()
+  const bar = useRef<HTMLDivElement>(null)
+  const isHome = pathname === '/' || pathname.includes('/posts/')
+
+  const [openId, setOpenId] = useState<string | null>(null)
+  const closeTimer = useRef<number | undefined>(undefined)
+  const openItem = menu.find((i) => i.id === openId && i.type === 'megaMenu')
+
+  const open = (id: string) => {
+    window.clearTimeout(closeTimer.current)
+    setOpenId(id)
+  }
+  const scheduleClose = () => {
+    window.clearTimeout(closeTimer.current)
+    closeTimer.current = window.setTimeout(() => setOpenId(null), 140)
+  }
+  const cancelClose = () => window.clearTimeout(closeTimer.current)
+
+  useEffect(() => setOpenId(null), [pathname])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpenId(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Drops in on load, hides when scrolling down, returns on scroll up.
+  useGSAP(
+    () =>
+      motionOK(() => {
+        const el = bar.current
+        if (!el) return
+        gsap.from(el, { yPercent: -100, duration: 1, delay: 0.1, ease: 'power3.out' })
+
+        let hidden = false
+        ScrollTrigger.create({
+          start: 0,
+          end: 'max',
+          onUpdate(self) {
+            const wantHidden = self.direction === 1 && self.scroll() > 200
+            if (wantHidden === hidden) return
+            hidden = wantHidden
+            gsap.to(el, {
+              yPercent: wantHidden ? -100 : 0,
+              duration: 0.5,
+              ease: 'power3.out',
+              overwrite: 'auto',
+            })
+          },
+        })
+      }),
+    { scope: bar },
+  )
+
+  const solid = !!openItem
 
   return (
-    <div className="relative z-20 border-b">
-      <nav className="flex items-center md:items-end justify-between uppercase container pt-2">
-        <div className="block flex-none md:hidden">
-          <Suspense fallback={null}>
-            <MobileMenu menu={menu} />
-          </Suspense>
+    <>
+      {header.announcement ? (
+        <div className="bg-primary px-4 py-2.5 text-center text-xs uppercase tracking-[0.18em] text-primary-foreground">
+          {header.announcement}
         </div>
-        <div className="flex w-full items-end justify-between">
-          <div className="flex w-full items-end gap-6 md:w-1/3">
-            <Link className="flex w-full items-center justify-center pt-4 pb-4 md:w-auto" href="/">
-              <Logo className="w-6 h-auto" />
-            </Link>
-            {menu.length ? (
-              <div className="hidden gap-4 text-sm md:flex md:items-center">
-                <NavigationMenu className="hidden gap-4 text-sm md:flex md:items-center">
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="px-0 py-0 uppercase h-auto bg-transparent hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:focus:bg-transparent data-[state=open]:hover:bg-transparent text-primary/50 hover:text-primary [&.active]:text-primary p-0 pt-2 pb-6 font-mono tracking-widest text-xs relative navLink">
-                        Shop
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <ul className="grid w-50 gap-1 p-4">
-                          {links.map((link, i) => (
-                            <li key={i}>
-                              <NavigationMenuLink asChild>
-                                <CMSLink
-                                  size={'clear'}
-                                  label={link.title}
-                                  url={link.href}
-                                  className="relative navLink"
-                                  appearance="nav"
-                                />
-                              </NavigationMenuLink>
-                            </li>
-                          ))}
-                        </ul>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
-                <ul className="hidden gap-4 text-sm md:flex md:items-center">
-                  {menu.map((item) => (
-                    <li key={item.id}>
-                      <CMSLink
-                        {...item.link}
-                        size={'clear'}
-                        className={cn('relative navLink', {
-                          active:
-                            item.link.url && item.link.url !== '/'
-                              ? pathname.includes(item.link.url)
-                              : false,
-                        })}
-                        appearance="nav"
-                      />
+      ) : null}
+
+      <div
+        ref={bar}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+        className={cn(
+          'z-50 w-full transition-colors duration-300',
+          isHome
+            ? solid
+              ? 'absolute inset-x-0 top-0 border-b bg-background text-foreground'
+              : 'absolute inset-x-0 top-0 border-transparent bg-transparent text-white'
+            : 'sticky top-0 border-b bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80',
+        )}
+      >
+        <nav className="container grid grid-cols-[1fr_auto_1fr] items-center uppercase">
+          {/* Left */}
+          <div className="flex items-center gap-6">
+            <div className="block flex-none md:hidden">
+              <Suspense fallback={null}>
+                <MobileMenu menu={menu} brands={brands} />
+              </Suspense>
+            </div>
+
+            <ul className="hidden gap-6 text-sm md:flex md:items-center">
+              {menu.map((item) => {
+                if (item.type === 'megaMenu') {
+                  const isOpen = openId === item.id
+                  return (
+                    <li key={item.id} onMouseEnter={() => open(item.id!)}>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        onClick={() => (isOpen ? setOpenId(null) : open(item.id!))}
+                        className={cn(
+                          'navLink relative py-6 font-mono text-xs uppercase tracking-widest transition-opacity',
+                          isOpen ? 'opacity-100' : 'opacity-70 hover:opacity-100',
+                        )}
+                      >
+                        {item.label}
+                      </button>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+                  )
+                }
+                return (
+                  <li key={item.id} onMouseEnter={() => setOpenId(null)}>
+                    <CMSLink
+                      {...item.link}
+                      size="clear"
+                      className={cn('navLink relative py-6! opacity-70 hover:opacity-100', {
+                        active:
+                          item.link?.url && item.link.url !== '/'
+                            ? pathname.includes(item.link.url)
+                            : false,
+                      })}
+                      appearance="nav"
+                    />
+                  </li>
+                )
+              })}
+            </ul>
           </div>
 
-          <div className="flex justify-end md:w-1/3 gap-4">
-            <Link href="/search">
-              <Button
-                variant="nav"
-                size="clear"
-                className="navLink relative items-end hover:cursor-pointer"
-              >
-                <span>Search</span>
-              </Button>
+          {/* Centre: logo */}
+          <Link className="flex items-center justify-center py-4" href="/" aria-label="Home">
+            <Logo className="h-auto" />
+          </Link>
+
+          {/* Right: search, account, cart */}
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
+            <Link
+              href="/search"
+              aria-label="Search"
+              className="relative p-2 transition-opacity hover:opacity-60"
+            >
+              <Search className="size-5" strokeWidth={1.5} />
+            </Link>
+            <Link
+              href={user ? '/account' : '/login'}
+              aria-label={user ? 'My account' : 'Log in'}
+              className="relative hidden p-2 transition-opacity hover:opacity-60 sm:block"
+            >
+              <User className="size-5" strokeWidth={1.5} />
             </Link>
             <Suspense fallback={<OpenCartButton />}>
               <Cart />
             </Suspense>
           </div>
-        </div>
-      </nav>
-    </div>
+        </nav>
+
+        {openItem && (
+          <MegaPanel item={openItem} brands={brands} onNavigate={() => setOpenId(null)} />
+        )}
+      </div>
+    </>
   )
 }
