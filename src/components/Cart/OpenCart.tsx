@@ -1,5 +1,6 @@
 import { ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utilities/cn'
 
 export function OpenCartButton({
   className,
@@ -14,7 +15,7 @@ export function OpenCartButton({
       variant="nav"
       size="clear"
       aria-label={quantity ? `Cart, ${quantity} items` : 'Cart'}
-      className="relative p-2 text-inherit hover:cursor-pointer"
+      className={cn('relative p-2 text-inherit hover:cursor-pointer', className)}
       {...rest}
     >
       <ShoppingBag className="size-5" strokeWidth={1.5} />

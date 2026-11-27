@@ -1,9 +1,15 @@
 import type { Page, Product } from '@/payload-types'
 
-import { Button, type ButtonProps } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/utilities/cn'
 import Link from 'next/link'
 import React from 'react'
+import { VariantProps } from 'class-variance-authority'
+
+type ButtonProps = React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }
 
 type CMSLinkType = {
   appearance?: 'inline' | ButtonProps['variant']

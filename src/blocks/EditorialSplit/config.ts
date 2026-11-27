@@ -24,7 +24,10 @@ export const EditorialSplit: Block = {
     link({
       appearances: false,
       overrides: {
-        admin: { condition: (_, siblingData) => Boolean(siblingData?.enableLink) },
+        admin: {
+          condition: (_data: Record<string, unknown>, siblingData: Record<string, unknown>) =>
+            Boolean(siblingData.enableLink),
+        },
       },
     }),
   ],
