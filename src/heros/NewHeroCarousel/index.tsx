@@ -198,7 +198,7 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
             data-panel
             // Explicit stacking order so each later slide paints over the pinned one before it.
             style={{ zIndex: i + 1 }}
-            className="relative flex h-[100svh] min-h-[560px] items-center justify-center overflow-hidden bg-neutral-950"
+            className="relative flex h-svh min-h-140 items-center justify-center overflow-hidden bg-neutral-950"
           >
             {/* Background */}
             <div data-panel-bg aria-hidden className="absolute inset-0">
@@ -237,7 +237,7 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
                 <>
                   <div
                     data-hero-text
-                    className="mx-auto max-w-3xl [&_h1]:text-5xl [&_h1]:font-light [&_h1]:leading-[1.05] [&_h1]:tracking-tight [&_h1]:text-white md:[&_h1]:text-7xl [&_p]:text-white/85"
+                    className="mx-auto max-w-3xl [&_h1]:md:text-5xl [&_h1]:text-3xl [&_h1]:font-light [&_h1]:leading-[1.05] [&_h1]:tracking-t  wsight [&_h1]:text-white [&_p]:text-white/85"
                   >
                     {richText && (
                       <RichText data={richText} enableGutter={false} enableProse={false} />
@@ -293,7 +293,7 @@ export const HeroCarousel: React.FC<Page['hero']> = (hero) => {
             </div>
 
             {/* Bottom bar: first slide's caption, scroll cue, counter */}
-            <div className="container absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-8 pb-8">
+            <div className="container absolute inset-x-0 bottom-0 z-10 items-end justify-between gap-8 pb-8 hidden md:flex">
               <div data-hero-meta={isFirst ? '' : undefined} className="max-w-xs text-left">
                 {isFirst && slide?.caption && (
                   <p className="text-xs uppercase tracking-[0.25em] text-white/70">

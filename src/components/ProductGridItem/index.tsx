@@ -44,7 +44,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, onQuickView, onAddTo
     gallery?.[0]?.image && typeof gallery[0]?.image !== 'string' ? gallery[0]?.image : false
 
   // small grey line above the title (first category, if populated)
-  const firstCategory = product.categories?.[0]
+  const firstCategory = product.brand
   const label =
     firstCategory && typeof firstCategory === 'object' ? (firstCategory as any).title : null
 
@@ -68,10 +68,10 @@ export const ProductGridItem: React.FC<Props> = ({ product, onQuickView, onAddTo
     ) : null
 
   return (
-    <article className="group relative flex h-full flex-col border-r border-b border-border bg-background">
+    <article className="group relative flex h-full flex-col border-r border-b border-foreground bg-background">
       {/* ---------- image area ---------- */}
       <Link href={href} className="relative block flex-1" aria-label={title ?? 'View product'}>
-        <div className="relative aspect-[3/4] w-full overflow-hidden">
+        <div className="relative aspect-3/4 w-full overflow-hidden">
           {image && (
             <Media
               className="absolute inset-0 p-8 md:p-12"
@@ -83,9 +83,9 @@ export const ProductGridItem: React.FC<Props> = ({ product, onQuickView, onAddTo
           )}
 
           {/* hover overlay: big title + price */}
-          <div className="pointer-events-none absolute inset-0 flex flex-col justify-center gap-3 p-8 opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:p-12">
-            {label && <span className="text-lg text-primary/70">{label}</span>}
-            <h3 className="text-3xl font-bold leading-none tracking-tight text-primary lg:text-4xl">
+          <div className="pointer-events-none absolute inset-0 flex flex-col justify-center gap-3 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:p-12">
+            {label && <span className="text-sm md:text-lg text-primary/70">{label}</span>}
+            <h3 className="text-lg md:text-2xl font-bold leading-none tracking-tight text-primary lg:text-4xl">
               {title}
             </h3>
             <div className="text-xl">{priceNode}</div>
@@ -95,35 +95,35 @@ export const ProductGridItem: React.FC<Props> = ({ product, onQuickView, onAddTo
 
       {/* ---------- NEW tab with crosshair lines ---------- */}
       {isNew && (
-        <div className="pointer-events-none absolute top-0 right-0 flex h-14 w-20 items-center justify-center border-b border-l border-border">
+        <div className="pointer-events-none absolute top-0 right-0 flex h-8 w-14 md:h-14 md:w-20 items-center justify-center border-b border-l border-foreground">
           <span className="text-xs font-bold uppercase tracking-wide text-green-600">New</span>
           {/* lines overshooting the corner */}
-          <span className="absolute -left-5 bottom-0 h-px w-5 bg-border" />
-          <span className="absolute -bottom-5 left-0 h-5 w-px bg-border" />
+          <span className="absolute -left-5 -bottom-px h-px w-5 bg-foreground" />
+          <span className="absolute -bottom-5 -left-px h-5 w-px bg-foreground" />
         </div>
       )}
 
       {/* ---------- bottom bar ---------- */}
-      <div className="relative h-20 border-t border-border">
+      <div className="relative h-20 border-t border-foreground">
         {/* default: label / title / price */}
         <Link
           href={href}
           tabIndex={-1}
-          className="absolute inset-0 flex items-center justify-between gap-4 px-6 transition-opacity duration-200 group-hover:opacity-0"
+          className="absolute inset-0 flex items-center justify-between gap-4 px-3 md:px-6 transition-opacity duration-200 group-hover:opacity-0"
         >
           <span className="min-w-0">
-            {label && <span className="block truncate text-sm text-primary/60">{label}</span>}
-            <span className="block truncate text-lg font-bold leading-tight text-primary">
+            {label && <span className="block truncate text-[10px] text-primary/60">{label}</span>}
+            <span className="block truncate text-xs md:text-lg font-bold leading-tight text-primary">
               {title}
             </span>
           </span>
-          <span className="shrink-0 text-lg">{priceNode}</span>
+          <span className="block shrink-0 text-xs md:text-lg">{priceNode}</span>
         </Link>
 
         {/* hover: quick view | add to cart */}
-        <div className="absolute inset-0 grid grid-cols-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
           <ActionButton
-            className="border-r border-border"
+            className="border-b md:border-r md:border-b-0 border-foreground"
             href={href}
             onClick={onQuickView ? () => onQuickView(product) : undefined}
             icon={<Eye className="size-5" />}
@@ -150,7 +150,7 @@ const ActionButton: React.FC<{
   className?: string
 }> = ({ href, label, icon, onClick, className }) => {
   const cls = cn(
-    'flex items-center justify-center gap-3 text-sm font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary hover:text-background',
+    'flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary hover:text-background',
     className,
   )
   return onClick ? (

@@ -43,7 +43,7 @@ export const FeaturedProductsCarousel: React.FC<Props> = ({ children }) => {
           align: 'start',
           slidesToScroll: 1,
           containScroll: 'keepSnaps',
-          loop: true
+          loop: true,
         }}
         className="w-full"
       >
@@ -51,7 +51,7 @@ export const FeaturedProductsCarousel: React.FC<Props> = ({ children }) => {
       </Carousel>
 
       {/* Custom carousel controls */}
-      <div className="mt-16 flex w-full items-center justify-end px-5 md:px-20">
+      <div className="mt-10 md:mt-16 flex w-full md:justify-end items-center">
         {/* Slide counter and progress */}
         {/* <div className="flex items-center gap-3">
           <span className="text-lg font-bold tabular-nums">{String(current).padStart(2, '0')}</span>
@@ -67,7 +67,7 @@ export const FeaturedProductsCarousel: React.FC<Props> = ({ children }) => {
         </div> */}
 
         {/* Previous / Next */}
-        <div className="flex border border-foreground">
+        <div className="flex justify-between w-full md:w-auto border border-foreground">
           <button
             type="button"
             aria-label="Previous slide"
@@ -83,7 +83,7 @@ export const FeaturedProductsCarousel: React.FC<Props> = ({ children }) => {
             aria-label="Next slide"
             disabled={!api?.canScrollNext()}
             onClick={() => api?.scrollNext()}
-            className="flex h-16 w-16 items-center justify-center transition-colors hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:opacity-40 md:h-20 md:w-20"
+            className="flex h-16 w-16 items-center justify-center border-l border-foreground  transition-colors hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:opacity-40 md:h-20 md:w-20"
           >
             <ArrowRight className="size-6 stroke-[1.5]" />
           </button>

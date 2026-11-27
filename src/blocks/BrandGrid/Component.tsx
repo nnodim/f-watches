@@ -11,7 +11,7 @@ export const BrandGridBlock: React.FC<Props> = ({ heading, brands }) => {
   if (!brands?.length) return null
 
   return (
-    <section className="container py-24">
+    <section className="container md:py-24">
       {heading && (
         <MaskText as="h2" className="mb-14 text-center text-4xl font-light tracking-tight md:text-5xl">
           {heading}
@@ -20,7 +20,7 @@ export const BrandGridBlock: React.FC<Props> = ({ heading, brands }) => {
       <div className="grid gap-10 md:grid-cols-2">
         {brands.map((brand, i) => (
           <article key={brand.id ?? i} className="relative flex flex-col gap-5">
-            <ClipReveal mode="up" className="aspect-[16/11]">
+            <ClipReveal mode="up" className="aspect-16/11">
               <Parallax className="absolute inset-0">
                 <Media fill resource={brand.image} imgClassName="object-cover" />
               </Parallax>

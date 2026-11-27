@@ -138,12 +138,12 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
   }
 
   return (
-    <div className="my-16" id={`block-${id}`}>
+    <div className="md:my-16" id={`block-${id}`}>
       {introContent && (
-        <div className="px-4 mb-16 flex items-center justify-between">
+        <div className="px-4 mb-10 md:mb-16 flex items-center justify-between">
           <Reveal>
             <RichText
-              className="ms-0 max-w-3xl text-3xl font-light tracking-tight prose-headings:font-light"
+              className="ms-0 max-w-3xl text-lg md:text-3xl font-light tracking-tight prose-headings:font-light"
               data={introContent}
               enableGutter={false}
             />
@@ -151,9 +151,7 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
           {viewMoreLink && (
             <Reveal delay={0.15}>
               <Link href={viewMoreLink}>
-                <Button variant="ghost" className="mb-4">
-                  View more
-                </Button>
+                <Button variant="ghost">View more</Button>
               </Link>
             </Reveal>
           )}
@@ -161,27 +159,38 @@ export const ArchiveBlock: React.FC<ArchiveBlockProps & { id?: string }> = async
       )}
 
       {relationTo === 'products' ? (
-        filterType === 'featured' ? (
-          <Reveal className="px-4">
-            <FeaturedProductsCarousel>
-              {(docs as Product[]).map((product) => (
-                <CarouselItem key={product.id} className="pl-0 sm:basis-1/3 lg:basis-1/4">
-                  <div className="border-t border-l border-border">
-                    <ProductGridItem product={product} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </FeaturedProductsCarousel>
-          </Reveal>
-        ) : (
-          <StaggerGroup className="px-4">
-            <Grid className="grid grid-cols-2 gap-0! border-t border-l border-border sm:grid-cols-3 lg:grid-cols-4">
-              {(docs as Product[]).map((product) => (
-                <ProductGridItem key={product.id} product={product} />
-              ))}
-            </Grid>
-          </StaggerGroup>
-        )
+        // filterType === 'featured' ? (
+        //   <Reveal className="px-4">
+        //     <FeaturedProductsCarousel>
+        //       {(docs as Product[]).map((product) => (
+        //         <CarouselItem key={product.id} className="pl-0 basis-1/2 sm:basis-1/3 lg:basis-1/4">
+        //           <div className="border-t border-l border-foreground">
+        //             <ProductGridItem product={product} />
+        //           </div>
+        //         </CarouselItem>
+        //       ))}
+        //     </FeaturedProductsCarousel>
+        //   </Reveal>
+        // ) : (
+        //   <StaggerGroup className="px-4">
+        //     <Grid className="grid grid-cols-2 gap-0! border-t border-l border-foreground md:grid-cols-3 lg:grid-cols-4">
+        //       {(docs as Product[]).map((product) => (
+        //         <ProductGridItem key={product.id} product={product} />
+        //       ))}
+        //     </Grid>
+        //   </StaggerGroup>
+        // )
+        <Reveal className="px-4">
+          <FeaturedProductsCarousel>
+            {(docs as Product[]).map((product) => (
+              <CarouselItem key={product.id} className="pl-0 basis-1/2 sm:basis-1/3 lg:basis-1/4">
+                <div className="border-t border-l border-foreground">
+                  <ProductGridItem product={product} />
+                </div>
+              </CarouselItem>
+            ))}
+          </FeaturedProductsCarousel>
+        </Reveal>
       ) : (
         <StaggerGroup>
           <CollectionArchive posts={docs as Post[]} />

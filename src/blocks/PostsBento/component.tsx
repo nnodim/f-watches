@@ -57,7 +57,7 @@ export const PostsBentoBlock: React.FC<PostsBentoBlockProps> = async ({
   if (!posts.length) return null
 
   return (
-    <section className="py-16">
+    <section className="md:py-16">
       {heading && (
         <MaskText
           as="h2"

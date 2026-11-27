@@ -133,7 +133,7 @@ export function HeaderClient({ header, brands }: Props) {
                     <CMSLink
                       {...item.link}
                       size="clear"
-                      className={cn('navLink relative py-6!', {
+                      className={cn('navLink relative py-6! opacity-70 hover:opacity-100', {
                         active:
                           item.link?.url && item.link.url !== '/'
                             ? pathname.includes(item.link.url)
